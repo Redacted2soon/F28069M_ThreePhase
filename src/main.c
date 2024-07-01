@@ -1,5 +1,6 @@
 #include "DSP28x_Project.h"     /// Device Headerfile and Examples Include File
 #include <math.h>
+#define   GLOBAL_Q       17
 #include <IQmathLib.h>
 
 ///prototypes
@@ -9,7 +10,6 @@ __interrupt void epwm3_isr(void);
 void InitEPwmm(void);
 
 ///Define Valid Ranges
-#define   GLOBAL_Q       24
 #define PWM_FREQUENCY_MIN 687
 #define PWM_FREQUENCY_MAX 10000
 #define SIN_FREQUENCY_MIN 0
@@ -20,21 +20,24 @@ void InitEPwmm(void);
 ///User-Defined Parameters
 #define PWM_FREQUENCY      5000     ///frequency of pwm DO NOT GO BELOW 687Hz, counter wont work properly 65535 < 90*10^6 / (687*2)
 #define SIN_FREQUENCY       60      ///sin frequency 0-150Hz
-#define MODULATION_DEPTH    1     ///modulation depth * 100
+#define MODULATION_DEPTH    1     ///modulation depth
 #define OFFSET              0       ///make sure offset is between +-(1-MODULATION_DEPTH)/2
-#define ANGLE_1             0        ///Phase shift angle in degree
-#define ANGLE_2            _IQ(120.0)     ///Phase shift angle in degree
+#define ANGLE_1            0.0      ///Phase shift angle in degree
+#define ANGLE_2            120.0     ///Phase shift angle in degree
 #define ANGLE_3            240.0     ///Phase shift angle in degree
 /// Make sure angles are between 0 and 360
 
+#define PI              3.14159265358979323846
+#define TWOPI_IQ17      _IQ17(PI*2)
 
-const Uint32 g_epwmTimerTBPRD = (Uint32) (.5 * (1.0 / PWM_FREQUENCY)
-        / (1.0 / (90.0 * 1000000.0))); /// Period register as long as there are no clock divisions
-
-
+const Uint32 g_epwmTimerTBPRD = (Uint32) (.5
+        * ((90.0 * 1000000.0) / PWM_FREQUENCY)); /// Period register as long as there are no clock divisions
 
 void main(void)
 {
+
+    //_iq23 one_eighty_q23 = _IQ23(180.0);
+    //float real1angleMain = _IQ23toF(one_eighty_q23);
 
     InitSysCtrl();
 
@@ -90,21 +93,29 @@ void main(void)
 __interrupt void epwm1_isr(void)
 {
     ///initialize angle and convert from degrees to rads
-    static float angle = ANGLE_1 * M_PI / 180.0;
+    static _iq17 angle_q17;
+    static int initialized = 0;
+    const _iq17 angleincrement_q17 = _IQdiv(
+            TWOPI_IQ17, _IQdiv(PWM_FREQUENCY, SIN_FREQUENCY));
 
-    const float angleincrement = 2 * M_PI
-            / (float) (PWM_FREQUENCY / SIN_FREQUENCY);
+    if (!initialized)
+    {
+        angle_q17 = _IQmpy(_IQ(ANGLE_1), _IQdiv(_IQ(PI), _IQ(180.0)));
+        initialized = 1;
+    }
+    float angleFloat = _IQtoF(angle_q17);
 
-    if (angle > 2 * M_PI)
-        angle = angle - 2 * M_PI;
+    if (angle_q17 > TWOPI_IQ17)
+        angle_q17 -= TWOPI_IQ17;
 
-    float duty_cycle = (sinf(angle) * MODULATION_DEPTH + 1) * .5
-            - OFFSET;
+    _iq17 dutyCycle_iq17 =
+            _IQdiv(_IQmpy(_IQsin(angle_q17), _IQ(MODULATION_DEPTH)) + _IQ(1),
+                   _IQ(2)) - _IQ(OFFSET);
 
-    EPwm1Regs.CMPA.half.CMPA = (Uint32) ((duty_cycle)
-            * ((float) g_epwmTimerTBPRD));
+    EPwm1Regs.CMPA.half.CMPA = (long) (_IQmpyI32int(dutyCycle_iq17,
+                                                    g_epwmTimerTBPRD));
 
-    angle += angleincrement;
+    angle_q17 += angleincrement_q17;
 
     EPwm1Regs.ETCLR.bit.INT = 1;
     PieCtrlRegs.PIEACK.all = PIEACK_GROUP3;
@@ -113,16 +124,15 @@ __interrupt void epwm1_isr(void)
 
 __interrupt void epwm2_isr(void)
 {
-    static float angle = ANGLE_2 * M_PI / 180.0;
+    static float angle = ANGLE_2 * PI / 180.0;
 
-    const float angleincrement = 2 * M_PI
+    const float angleincrement = 2 * PI
             / (float) (PWM_FREQUENCY / SIN_FREQUENCY);
 
-    if (angle > 2 * M_PI)
-        angle = angle - 2 * M_PI;
+    if (angle > 2 * PI)
+        angle = angle - 2 * PI;
 
-    float duty_cycle = (sinf(angle) * MODULATION_DEPTH + 1) * .5
-            - OFFSET;
+    float duty_cycle = (sinf(angle) * MODULATION_DEPTH + 1) * .5 - OFFSET;
 
     EPwm2Regs.CMPA.half.CMPA = (Uint32) ((duty_cycle)
             * ((float) g_epwmTimerTBPRD));
@@ -131,19 +141,18 @@ __interrupt void epwm2_isr(void)
 
     EPwm2Regs.ETCLR.bit.INT = 1;
     PieCtrlRegs.PIEACK.all = PIEACK_GROUP3;
-}
+ }
 __interrupt void epwm3_isr(void)
 {
-    static float angle = ANGLE_3 * M_PI / 180.0;
+    static float angle = ANGLE_3 * PI / 180.0;
 
-    const float angleincrement = 2 * M_PI
+    const float angleincrement = 2 * PI
             / (float) (PWM_FREQUENCY / SIN_FREQUENCY);
 
-    if (angle > 2 * M_PI)
-        angle = angle - 2 * M_PI;
+    if (angle > 2 * PI)
+        angle = angle - 2 * PI;
 
-    float duty_cycle = (sinf(angle) * MODULATION_DEPTH + 1) * .5
-            - OFFSET;
+    float duty_cycle = (sinf(angle) * MODULATION_DEPTH + 1) * .5 - OFFSET;
 
     EPwm3Regs.CMPA.half.CMPA = (Uint32) ((duty_cycle)
             * ((float) g_epwmTimerTBPRD));
