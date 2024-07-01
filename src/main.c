@@ -18,35 +18,15 @@ void InitEPwmm(void);
 ///User-Defined Parameters
 #define PWM_FREQUENCY      5000     ///frequency of pwm DO NOT GO BELOW 687Hz, counter wont work properly 65535 < 90*10^6 / (687*2)
 #define SIN_FREQUENCY       60      ///sin frequency 0-150Hz
-#define MODULATION_DEPTH    100     ///modulation depth * 100
-#define OFFSET              0       ///make sure offset is between +-(100-MODULATION_DEPTH)/2
-#define ANGLE_1             0        ///Phase shift angle in degree
+#define MODULATION_DEPTH    1.0     ///modulation depth between 0 and 1
+#define OFFSET              0.0       ///make sure offset is between +-(1-MODULATION_DEPTH)/2
+#define ANGLE_1             0.0        ///Phase shift angle in degree
 #define ANGLE_2            120.0     ///Phase shift angle in degree
 #define ANGLE_3            240.0     ///Phase shift angle in degree
 /// Make sure angles are between 0 and 360
 
 const Uint32 g_epwmTimerTBPRD = (Uint32) (.5 * (1.0 / PWM_FREQUENCY)
         / (1.0 / (90.0 * 1000000.0))); /// Period register as long as there are no clock divisions
-
-/// Check PWM_FREQUENCY
-#if (PWM_FREQUENCY < PWM_FREQUENCY_MIN) || (PWM_FREQUENCY > PWM_FREQUENCY_MAX)
-    #error "PWM_FREQUENCY is out of range! It should be between PWM_FREQUENCY_MIN and PWM_FREQUENCY_MAX."
-#endif
-
-/// Check SIN_FREQUENCY
-#if (SIN_FREQUENCY < SIN_FREQUENCY_MIN) || (SIN_FREQUENCY > SIN_FREQUENCY_MAX)
-    #error "SIN_FREQUENCY is out of range! It should be between SIN_FREQUENCY_MIN and SIN_FREQUENCY_MAX."
-#endif
-
-/// Check MODULATION_DEPTH
-#if (MODULATION_DEPTH < MODULATION_DEPTH_MIN) || (MODULATION_DEPTH > MODULATION_DEPTH_MAX )
-    #error "MODULATION_DEPTH is out of range! It should be between 0 and 100."
-#endif
-
-/// Check OFFSET
-#if (OFFSET > (100 - MODULATION_DEPTH)/2 ) || (OFFSET < (MODULATION_DEPTH - 100)/2)
-    #error "OFFSET is out of range! It should be between +-(MODULATION_DEPTH - 100)/2."
-#endif
 
 void main(void)
 {
@@ -112,8 +92,8 @@ __interrupt void epwm1_isr(void)
     if (angle > 2 * M_PI)
         angle = angle - 2 * M_PI;
 
-    float duty_cycle = (sinf(angle) * MODULATION_DEPTH / 100.0 + 1) * .5
-            - OFFSET / 100;
+    float duty_cycle = (sinf(angle) * MODULATION_DEPTH + 1) * .5
+            - OFFSET;
 
     EPwm1Regs.CMPA.half.CMPA = (Uint32) ((duty_cycle)
             * ((float) g_epwmTimerTBPRD));
@@ -135,8 +115,8 @@ __interrupt void epwm2_isr(void)
     if (angle > 2 * M_PI)
         angle = angle - 2 * M_PI;
 
-    float duty_cycle = (sinf(angle) * MODULATION_DEPTH / 100.0 + 1) * .5
-            - OFFSET / 100;
+    float duty_cycle = (sinf(angle) * MODULATION_DEPTH + 1) * .5
+            - OFFSET;
 
     EPwm2Regs.CMPA.half.CMPA = (Uint32) ((duty_cycle)
             * ((float) g_epwmTimerTBPRD));
@@ -156,8 +136,8 @@ __interrupt void epwm3_isr(void)
     if (angle > 2 * M_PI)
         angle = angle - 2 * M_PI;
 
-    float duty_cycle = (sinf(angle) * MODULATION_DEPTH / 100.0 + 1) * .5
-            - OFFSET / 100;
+    float duty_cycle = (sinf(angle) * MODULATION_DEPTH + 1) * .5
+            - OFFSET;
 
     EPwm3Regs.CMPA.half.CMPA = (Uint32) ((duty_cycle)
             * ((float) g_epwmTimerTBPRD));

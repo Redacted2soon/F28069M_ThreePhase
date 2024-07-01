@@ -37,7 +37,7 @@ ORDERED_OBJS += \
 "./common/source/F2806x_usDelay.obj" \
 "./headers/source/F2806x_GlobalVariableDefs.obj" \
 "./src/main.obj" \
-"../F28069M.cmd" \
+"../f28069M_ram_lnk.cmd" \
 "C:/ti/c2000/C2000Ware_5_02_00_00/device_support/f2806x/headers/cmd/F2806x_Headers_nonBIOS.cmd" \
 $(GEN_CMDS__FLAG) \
 -llibc.a \
