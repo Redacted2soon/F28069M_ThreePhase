@@ -35,5 +35,16 @@
 			<type>2</type>
 			<location>C:/ti/c2000/C2000Ware_5_02_00_00/device_support/f2806x/headers</location>
 		</link>
+		<link>
+			<name>src/IQsampleSmall.c</name>
+			<type>1</type>
+			<locationURI>INSTALLROOT_IQMATH/examples/C/source/IQsampleSmall.c</locationURI>
+		</link>
 	</linkedResources>
+	<variableList>
+		<variable>
+			<name>INSTALLROOT_IQMATH</name>
+			<value>$%7BTI_PRODUCTS_DIR%7D/c2000/C2000Ware_5_02_00_00/libraries/math/IQmath/c28</value>
+		</variable>
+	</variableList>
 </projectDescription>

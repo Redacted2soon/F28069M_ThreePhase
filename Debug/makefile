@@ -10,6 +10,10 @@ GEN_OPTS__FLAG :=
 GEN_CMDS__FLAG := 
 
 ORDERED_OBJS += \
+"./src/main.obj" \
+-lIQmath_fpu32.lib \
+-l2806x_IQmath_BootROMSymbols_fpu32.lib \
+"../f28069M_ram_lnk.cmd" \
 "./common/source/F2806x_Adc.obj" \
 "./common/source/F2806x_CSMPasswords.obj" \
 "./common/source/F2806x_CodeStartBranch.obj" \
@@ -36,10 +40,9 @@ ORDERED_OBJS += \
 "./common/source/F2806x_TempSensorConv.obj" \
 "./common/source/F2806x_usDelay.obj" \
 "./headers/source/F2806x_GlobalVariableDefs.obj" \
-"./src/main.obj" \
-"../F28069M.cmd" \
 "C:/ti/c2000/C2000Ware_5_02_00_00/device_support/f2806x/headers/cmd/F2806x_Headers_nonBIOS.cmd" \
 $(GEN_CMDS__FLAG) \
+-lrts2800_fpu32.lib \
 -llibc.a \
 
 -include ../makefile.init
@@ -169,7 +172,7 @@ all: $(OBJS) $(CMD_SRCS) $(GEN_CMDS)
 F28069M_ThreePhase.out: $(OBJS) $(CMD_SRCS) $(GEN_CMDS)
 	@echo 'Building target: "$@"'
 	@echo 'Invoking: C2000 Linker'
-	"C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/bin/cl2000" -v28 -ml -mt --cla_support=cla0 --float_support=fpu32 --vcu_support=vcu0 --advice:performance=all -g --diag_warning=225 --diag_wrap=off --display_error_number --abi=coffabi -z -m"F28069M_ThreePhase.map" --stack_size=0x300 --warn_sections -i"C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/lib" -i"C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/include" --reread_libs --diag_wrap=off --display_error_number --xml_link_info="F28069M_ThreePhase_linkInfo.xml" --rom_model -o "F28069M_ThreePhase.out" $(ORDERED_OBJS)
+	"C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/bin/cl2000" -v28 -ml -mt --cla_support=cla0 --float_support=fpu32 --vcu_support=vcu0 --advice:performance=all -g --diag_warning=225 --diag_wrap=off --display_error_number --abi=coffabi -z -m"F28069M_ThreePhase.map" --stack_size=0x300 --warn_sections -i"C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/lib" -i"C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/include" -i"C:/ti/c2000/C2000Ware_5_02_00_00/libraries/boot_rom/f2806x/v1_1/rom_symbol_libs/IQmath" -i"C:/ti/c2000/C2000Ware_5_02_00_00/libraries/math/IQmath/c28/lib" --priority --reread_libs --diag_wrap=off --display_error_number --xml_link_info="F28069M_ThreePhase_linkInfo.xml" --rom_model -o "F28069M_ThreePhase.out" $(ORDERED_OBJS)
 	@echo 'Finished building target: "$@"'
 	@echo ' '
 

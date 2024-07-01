@@ -1,3 +1,7 @@
+"./src/main.obj"
+-lIQmath_fpu32.lib
+-l2806x_IQmath_BootROMSymbols_fpu32.lib
+"../f28069M_ram_lnk.cmd"
 "./common/source/F2806x_Adc.obj"
 "./common/source/F2806x_CSMPasswords.obj"
 "./common/source/F2806x_CodeStartBranch.obj"
@@ -24,7 +28,6 @@
 "./common/source/F2806x_TempSensorConv.obj"
 "./common/source/F2806x_usDelay.obj"
 "./headers/source/F2806x_GlobalVariableDefs.obj"
-"./src/main.obj"
-"../F28069M.cmd"
 "C:/ti/c2000/C2000Ware_5_02_00_00/device_support/f2806x/headers/cmd/F2806x_Headers_nonBIOS.cmd"
+-lrts2800_fpu32.lib
 -llibc.a
