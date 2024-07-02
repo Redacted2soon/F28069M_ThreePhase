@@ -21,7 +21,6 @@ The project is structured as a Code Composer Studio project.
 
 1. Download Code Composer Studio.
 2. Obtain the necessary hardware and software libraries (c2000ware).
-3. Ensure the `FunctionGeneratorConfig.h` file is correctly placed in the project directory.
 
 ### Opening the Project
 
