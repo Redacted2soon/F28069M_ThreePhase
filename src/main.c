@@ -149,8 +149,8 @@ void main(void)
 
         EALLOW;
         SysCtrlRegs.PCLKCR0.bit.TBCLKSYNC = 0; /// Disable TBCLK within the ePWM
+        //InitEPwmForceLow(); TODO:DOES NOT WORK AS OF NOW
         EDIS;
-        void InitEPwmForceLow(void);
 
         ReceivedChar = SciaRegs.SCIRXBUF.all;  // Read received character
 
