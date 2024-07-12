@@ -34,14 +34,20 @@ src/main.obj: C:/ti/c2000/C2000Ware_5_02_00_00/device_support/f2806x/common/incl
 src/main.obj: C:/ti/c2000/C2000Ware_5_02_00_00/device_support/f2806x/common/include/F2806x_Dma_defines.h
 src/main.obj: C:/ti/c2000/C2000Ware_5_02_00_00/device_support/f2806x/common/include/F2806x_Cla_defines.h
 src/main.obj: C:/ti/c2000/C2000Ware_5_02_00_00/device_support/f2806x/common/include/F2806x_DefaultISR.h
-src/main.obj: C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/include/math.h
+src/main.obj: C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/include/stdlib.h
 src/main.obj: C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/include/_ti_config.h
 src/main.obj: C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/include/linkage.h
+src/main.obj: C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/include/stdlibf.h
+src/main.obj: C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/include/sys/cdefs.h
+src/main.obj: C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/include/math.h
 src/main.obj: C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/include/_defs.h
 src/main.obj: C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/include/sys/_types.h
-src/main.obj: C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/include/sys/cdefs.h
 src/main.obj: C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/include/machine/_types.h
 src/main.obj: C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/include/machine/_limits.h
+src/main.obj: C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/include/stdio.h
+src/main.obj: C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/include/stdarg.h
+src/main.obj: C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/include/string.h
+src/main.obj: C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/include/xlocale/_string.h
 
 ../src/main.c:
 
@@ -111,19 +117,31 @@ C:/ti/c2000/C2000Ware_5_02_00_00/device_support/f2806x/common/include/F2806x_Cla
 
 C:/ti/c2000/C2000Ware_5_02_00_00/device_support/f2806x/common/include/F2806x_DefaultISR.h:
 
-C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/include/math.h:
+C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/include/stdlib.h:
 
 C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/include/_ti_config.h:
 
 C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/include/linkage.h:
 
+C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/include/stdlibf.h:
+
+C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/include/sys/cdefs.h:
+
+C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/include/math.h:
+
 C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/include/_defs.h:
 
 C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/include/sys/_types.h:
 
-C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/include/sys/cdefs.h:
-
 C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/include/machine/_types.h:
 
 C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/include/machine/_limits.h:
+
+C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/include/stdio.h:
+
+C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/include/stdarg.h:
+
+C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/include/string.h:
+
+C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/include/xlocale/_string.h:
 
