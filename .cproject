@@ -79,7 +79,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="F28069M.cmd|common/source/F2806x_SWPrioritizedPieVect.c|common/source/F2806x_SWPrioritizedDefaultIsr.c|headers/cmd/F2806x_Headers_BIOS.cmd|common/cmd" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="common/source/F2806x_CSMPasswords.asm|F28069M.cmd|common/source/F2806x_SWPrioritizedPieVect.c|common/source/F2806x_SWPrioritizedDefaultIsr.c|headers/cmd/F2806x_Headers_BIOS.cmd|common/cmd" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>

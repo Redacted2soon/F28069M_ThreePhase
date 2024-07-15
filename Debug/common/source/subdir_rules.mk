@@ -12,13 +12,6 @@ common/source/F2806x_Adc.obj: C:/ti/c2000/C2000Ware_5_02_00_00/device_support/f2
 	@echo 'Finished building: "$<"'
 	@echo ' '
 
-common/source/F2806x_CSMPasswords.obj: C:/ti/c2000/C2000Ware_5_02_00_00/device_support/f2806x/common/source/F2806x_CSMPasswords.asm $(GEN_OPTS) | $(GEN_FILES) $(GEN_MISC_FILES)
-	@echo 'Building file: "$<"'
-	@echo 'Invoking: C2000 Compiler'
-	"C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/bin/cl2000" -v28 -ml -mt --cla_support=cla0 --float_support=fpu32 --vcu_support=vcu0 --include_path="C:/Users/admin/workspace_v12/F28069M_ThreePhase" --include_path="C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/include" --include_path="C:/ti/c2000/C2000Ware_5_02_00_00/device_support/f2806x/common/include" --include_path="C:/ti/c2000/C2000Ware_5_02_00_00/device_support/f2806x/headers/include" --include_path="C:/Users/admin/workspace_v12/F28069M_ThreePhase/include" --advice:performance=all -g --diag_warning=225 --diag_wrap=off --display_error_number --abi=coffabi --preproc_with_compile --preproc_dependency="common/source/$(basename $(<F)).d_raw" --obj_directory="common/source" $(GEN_OPTS__FLAG) "$<"
-	@echo 'Finished building: "$<"'
-	@echo ' '
-
 common/source/F2806x_CodeStartBranch.obj: C:/ti/c2000/C2000Ware_5_02_00_00/device_support/f2806x/common/source/F2806x_CodeStartBranch.asm $(GEN_OPTS) | $(GEN_FILES) $(GEN_MISC_FILES)
 	@echo 'Building file: "$<"'
 	@echo 'Invoking: C2000 Compiler'

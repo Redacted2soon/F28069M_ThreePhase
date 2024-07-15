@@ -27,6 +27,8 @@
 #define MAX_BUFFER_SIZE 100
 #define MAX_MSG_SIZE 100
 
+#define NEWLINE "\r\n" // Change depending on serial terminal new line character
+
 // Struct to hold PWM parameters
 typedef struct
 {
@@ -42,13 +44,13 @@ typedef struct
 
 // Initialize default PWM parameters
 EPwmParams originalePwmParams = {
-        .pwm_frequency = 2500, // frequency of pwm DO NOT GO BELOW 687Hz, counter wont work properly 65535 < 90*10^6 / (687*2)
-        .sin_frequency = 60,       // sin frequency 0-150Hz
-        .modulation_depth = 1.0,   // modulation depth between 0 and 1
-        .offset = 0.0, // make sure offset is between +-(1-MODULATION_DEPTH)/2
-        .angle_1 = 0,            // Phase shift angle in degree
-        .angle_2 = 120,          // Phase shift angle in degree
-        .angle_3 = 240,          // Phase shift angle in degree
+        .pwm_frequency = 2500,      // frequency of pwm DO NOT GO BELOW 687Hz, counter wont work properly 65535 < 90*10^6 / (687*2)
+        .sin_frequency = 60,        // sin frequency 0-150Hz
+        .modulation_depth = 1.0,    // modulation depth between 0 and 1
+        .offset = 0.0,              // make sure offset is between +-(1-MODULATION_DEPTH)/2
+        .angle_1 = 0,               // Phase shift angle in degree
+        .angle_2 = 120,             // Phase shift angle in degree
+        .angle_3 = 240,             // Phase shift angle in degree
         .epwmTimerTBPRD = 0
 };
 
@@ -69,8 +71,7 @@ void print_params(const EPwmParams *arr);
 void float_to_string(float value);
 void clear_scia_rx_buffer(void);
 void print_welcome_screen(void);
-void InitEPwmm(void);
-void InitEPwmForceLow(void);
+void Init_Epwmm(void);
 
 ///prototypes for interrupt service routines (ISRs)
 __interrupt void epwm1_isr(void);
@@ -80,7 +81,9 @@ __interrupt void epwm3_isr(void);
 // Main function
 void main(void)
 {
+    // Calculate the ePWM timer period
     originalePwmParams.epwmTimerTBPRD = (Uint32)(0.5 * (CLKRATE / originalePwmParams.pwm_frequency));
+
     // Copy default PWM parameters to new PWM parameters
     memcpy(&newEpwmParams, &originalePwmParams, sizeof(EPwmParams));
 
@@ -110,16 +113,18 @@ void main(void)
     PieVectTable.EPWM3_INT = &epwm3_isr;
     EDIS; /// This is needed to disable write to EALLOW protected registers
 
+    /// Initialize the ePWM modules, uncomment if you want epwm to initialize on startup
+    /*
     EALLOW;
     SysCtrlRegs.PCLKCR0.bit.TBCLKSYNC = 0; /// Disable TBCLK within the ePWM
     EDIS;
 
-    /// Initialize the ePWM modules
-    InitEPwmm();
+    Init_Epwmm();
 
     EALLOW;
     SysCtrlRegs.PCLKCR0.bit.TBCLKSYNC = 1; /// Enable TBCLK within the ePWM
     EDIS;
+    */
 
     IER |= M_INT3; /// Enable CPU INT3 which is connected to EPWM1-3 INT
 
@@ -128,12 +133,11 @@ void main(void)
     PieCtrlRegs.PIEIER3.bit.INTx2 = 1;
     PieCtrlRegs.PIEIER3.bit.INTx3 = 1;
 
-    EINT;
-    /// Enable Global interrupt INTM
-    ERTM;
-    /// Enable Global realtime interrupt DBGM
+    EINT;    /// Enable Global interrupt INTM
+    ERTM;    /// Enable Global real time interrupt DBGM
 
     print_welcome_screen(); // Print the welcome message
+
     // Buffer for incoming data and buffer index
     static char buffer[MAX_BUFFER_SIZE];
     Uint16 bufferIndex = 0;
@@ -142,15 +146,10 @@ void main(void)
     // Main loop
     while (1)
     {
+        // Wait for a character to be received
         while (SciaRegs.SCIFFRX.bit.RXFFST < 1)
         {
-            // Wait for a character to be received
         }
-
-        EALLOW;
-        SysCtrlRegs.PCLKCR0.bit.TBCLKSYNC = 0; /// Disable TBCLK within the ePWM
-        //InitEPwmForceLow(); TODO:DOES NOT WORK AS OF NOW
-        EDIS;
 
         ReceivedChar = SciaRegs.SCIRXBUF.all;  // Read received character
 
@@ -158,7 +157,7 @@ void main(void)
         if (ReceivedChar == '\0')
         {
             //echo back user input
-            scia_msg("\r\n\r\nYou sent: ");
+            scia_msg(NEWLINE NEWLINE"You sent: ");
             buffer[bufferIndex] = '\0';
             scia_msg(buffer);
 
@@ -167,19 +166,20 @@ void main(void)
 
             if (confirm) // Checks if there was an error in processing
             {
-                confirm = confirm_values(); // Allows user to confirm values
+                confirm = confirm_values(); // Allows user to confirm values, Y -> confirm = 1
             }
 
             // Confirm the values
             if (confirm)
             {
-                scia_msg("\r\n\r\nValues confirmed and set.");
+                scia_msg(NEWLINE NEWLINE"Values confirmed and set.");
                 memcpy(&originalePwmParams, &newEpwmParams, sizeof(EPwmParams)); // Copy new values to original
-                InitEPwmm();
+                originalePwmParams.epwmTimerTBPRD = (Uint32)(0.5 * (CLKRATE / originalePwmParams.pwm_frequency));
+                Init_Epwmm();
             }
             else
             {
-                scia_msg("\r\n\r\nValues reset to:");
+                scia_msg(NEWLINE NEWLINE"Values reset to:");
                 print_params(&originalePwmParams);  // Print the original values
             }
 
@@ -189,10 +189,6 @@ void main(void)
             clear_scia_rx_buffer();
             print_welcome_screen();  // Print the welcome message again
 
-            //turn epwm back on
-            EALLOW;
-            SysCtrlRegs.PCLKCR0.bit.TBCLKSYNC = 1; /// Enable TBCLK within the ePWM
-            EDIS;
         }
         else
         {
@@ -205,7 +201,7 @@ void main(void)
             {
                 // Handle buffer overflow error
                 scia_msg(
-                        "\r\n\r\nError: Input buffer overflow. Too many characters added. Buffer reset");
+                        NEWLINE NEWLINE"Error: Input buffer overflow. Too many characters added. Buffer reset");
                 bufferIndex = 0; // Reset buffer index to avoid overflow
                 memset(buffer, 0, MAX_BUFFER_SIZE);
                 clear_scia_rx_buffer();
@@ -215,6 +211,7 @@ void main(void)
     }
 }
 
+// Interrupt service routine for ePWM1
 __interrupt void epwm1_isr(void)
 {
     ///initialize angle and convert from degrees to radians
@@ -244,7 +241,6 @@ __interrupt void epwm1_isr(void)
 
     // Acknowledge the interrupt in the PIE control register
     PieCtrlRegs.PIEACK.all = PIEACK_GROUP3;
-
 }
 
 //same as epwm1
@@ -287,9 +283,7 @@ __interrupt void epwm3_isr(void)
     PieCtrlRegs.PIEACK.all = PIEACK_GROUP3;
 }
 
-//WHERE THE SCI FUNCTIONS START, IN FUTURE MAKE SEPERATE FILE
-
-// Function to process the buffer and extract parameters
+// Process the input buffer and extract PWM parameters
 int process_buffer(const char *buffer)
 {
 
@@ -370,7 +364,7 @@ int process_buffer(const char *buffer)
             || newEpwmParams.offset < -(1 - newEpwmParams.modulation_depth) / 2)
     {
         newEpwmParams.offset = originalePwmParams.offset;
-        scia_msg("\r\n\r\nOffset out of range");
+        scia_msg(NEWLINE NEWLINE"Offset out of range");
         error = 1;
     }
 
@@ -378,13 +372,14 @@ int process_buffer(const char *buffer)
 }
 
 // Function to populate a variable from the buffer
-int populate_variable(const char *arr, float *var, float min, float max,
+int populate_variable(const char *arr, float *var, const float min, const float max,
                       int *pindex)
 {
-    char temp[8] = { '\0' };  // Temporary array to hold value
+    char temp[8] = { '\0' };  // Temporary array to hold input value
+
     int i = 1, j = 0, periodCount = 0;
 
-    // Check for invalid input (double letter)
+    // Check for invalid input (multiple letters)
     if (arr[i] > '@' && arr[i] < 'z')
     {
         scia_msg("\r\nInvalid input : ");
@@ -392,19 +387,17 @@ int populate_variable(const char *arr, float *var, float min, float max,
         return 1;
     }
 
-    // Skips white space between letter and number
+    // Skips space between letter and number
     while (arr[i] == ' ')
         i++;
 
     // Extract the number
-    while (arr[i] != '\0'
-            && (arr[i] == '.' || arr[i] == '-'
-                    || (arr[i] >= '0' && arr[i] <= '9')))
+    while (arr[i] != '\0' && (arr[i] == '.' || arr[i] == '-' || (arr[i] >= '0' && arr[i] <= '9')))
     {
         // Check if number is too big
         if (j > 8)
         {
-            scia_msg("\r\nNumber input has too many digits");
+            scia_msg(NEWLINE"Number input has too many digits");
             report_invalid_input(*temp);
             return 1;
         }
@@ -420,7 +413,7 @@ int populate_variable(const char *arr, float *var, float min, float max,
     // Check if there are multiple periods
     if (periodCount > 1)
     {
-        scia_msg("\r\nInput has too many decimal points");
+        scia_msg(NEWLINE"Input has too many decimal points");
         report_invalid_input(*temp);
         return 1;
     }
@@ -429,7 +422,7 @@ int populate_variable(const char *arr, float *var, float min, float max,
     *var = atof(temp);
     if (*var < min || *var > max)
     {
-        scia_msg("\r\nFirst value out of bound: ");
+        scia_msg(NEWLINE"Value out of bound: ");
         scia_msg(temp);
         return 1;
     }
@@ -446,7 +439,7 @@ int confirm_values(void)
     Uint16 RecivedChar = 0;
 
     // Ask the user to confirm the values
-    scia_msg("\r\n\r\nPLEASE CONFIRM THE VALUES (Y/N):  ");
+    scia_msg(NEWLINE NEWLINE"PLEASE CONFIRM THE VALUES (Y/N):  ");
     print_params(&newEpwmParams);
 
     // Wait for a valid response
@@ -465,44 +458,45 @@ int confirm_values(void)
         }
         else if (RecivedChar == 'N' || RecivedChar == 'n')
         {
-            confirm = 2;
+            confirm = 2; //number that is not one
         }
         else
         {
-            scia_msg("\r\nInvalid input. Please enter Y or N.\r\n");
+            scia_msg(NEWLINE "Invalid input. Please enter Y or N.");
             SciaRegs.SCIRXBUF.all;
         }
 
     }
-    return (confirm == 1) ? 1 : 0;
+    return (confirm == 1) ? 1 : 0; //if Y in input, return 1
 }
 
+//prints to serial terminal
 void print_params(const EPwmParams *arr)
 {
-    scia_msg("\r\n\r\nPWM frequency = ");
+    scia_msg(NEWLINE NEWLINE "PWM frequency = ");
     float_to_string(arr->pwm_frequency);
 
-    scia_msg("\r\nSin wave frequency = ");
+    scia_msg(NEWLINE "Sin wave frequency = ");
     float_to_string(arr->sin_frequency);
 
-    scia_msg("\r\nModulation depth = ");
+    scia_msg(NEWLINE "Modulation depth = ");
     float_to_string(arr->modulation_depth);
 
-    scia_msg("\r\nOffset = ");
+    scia_msg(NEWLINE "Offset = ");
     float_to_string(arr->offset);
 
-    scia_msg("\r\nAngle 1 = ");
+    scia_msg(NEWLINE "Angle 1 = ");
     float_to_string(arr->angle_1);
 
-    scia_msg("\r\nAngle 2 = ");
+    scia_msg(NEWLINE "Angle 2 = ");
     float_to_string(arr->angle_2);
 
-    scia_msg("\r\nAngle 3 = ");
+    scia_msg(NEWLINE "Angle 3 = ");
     float_to_string(arr->angle_3);
 }
 
 // Function to convert a float to a string and send it via SCI
-void float_to_string(float value)
+void float_to_string(const float value)
 {
     // Assuming msg is large enough
     char msg[20];
@@ -532,10 +526,10 @@ void float_to_string(float value)
 }
 
 // Function to report invalid input
-void report_invalid_input(char invalid_char)
+void report_invalid_input(const char invalid_char)
 {
     char msg[50];
-    sprintf(msg, "\r\n\r\nInvalid character: %c", invalid_char);
+    sprintf(msg, NEWLINE NEWLINE "Invalid character: %c", invalid_char);
     scia_msg(msg);
 }
 
@@ -572,23 +566,23 @@ void scia_msg(const char *msg)
 void print_welcome_screen(void)
 {
     scia_msg(
-            "\r\n\r\n-------------------------------------------------------------------------------------------------"
+            NEWLINE "-------------------------------------------------------------------------------------------------"
 
-            "\r\nPlease Enter a string in the format PARAMATER1 VALUE1,PARAMATER2 VALUE2 (for example: P 2500, S 60,M .13)\r\n"
+            NEWLINE "Please Enter a string in the format PARAMATER1 VALUE1,PARAMATER2 VALUE2 (for example: P 2500, S 60,M .13)"
 
-            "\r\nP = PWM frequency (in Hz,ACCEPTABLE INPUTS: 687 - 10000)"
+            NEWLINE NEWLINE "P = PWM frequency (in Hz,ACCEPTABLE INPUTS: 687 - 10000)"
 
-            "\r\nS = Sin wave frequency (in Hz, ACCEPTABLE INPUTS: 1 - 300)"
+            NEWLINE "S = Sin wave frequency (in Hz, ACCEPTABLE INPUTS: 1 - 300)"
 
-            "\r\nM = Modulation depth (ACCEPTABLE INPUTS: 0.0 - 1.0, up to three decimal points)"
+            NEWLINE "M = Modulation depth (ACCEPTABLE INPUTS: 0.0 - 1.0, up to three decimal points)"
 
-            "\r\nO = Offset (volts, ACCEPTABLE INPUTS: +-((1-Modulation depth) / 2), up to three decimal points )"
+            NEWLINE "O = Offset (volts, ACCEPTABLE INPUTS: +-((1-Modulation depth) / 2), up to three decimal points )"
 
-            "\r\nA1 = Angle 1 offset (in degrees, ACCEPTABLE INPUTS: 0 - 360)"
+            NEWLINE "A1 = Angle 1 offset (in degrees, ACCEPTABLE INPUTS: -360 to 360)"
 
-            "\r\nA2 = Angle 2 offset (in degrees, ACCEPTABLE INPUTS: 0 - 360)"
+            NEWLINE "A2 = Angle 2 offset (in degrees, ACCEPTABLE INPUTS:  -360 to 360)"
 
-            "\r\nA3 = Angle 3 offset (in degrees, ACCEPTABLE INPUTS: 0 - 360)");
+            NEWLINE "A3 = Angle 3 offset (in degrees, ACCEPTABLE INPUTS:  -360 to 360)");
 
 }
 
@@ -618,9 +612,8 @@ void scia_fifo_init()
     SciaRegs.SCIFFCT.all = 0x0;
 }
 
-void InitEPwmm()
+void Init_Epwmm()
 {
-
     ///setup sync
     EPwm1Regs.TBCTL.bit.SYNCOSEL = TB_SYNC_IN;  /// Pass through
     EPwm2Regs.TBCTL.bit.SYNCOSEL = TB_SYNC_IN;  /// Pass through
@@ -692,19 +685,4 @@ void InitEPwmm()
     EPwm2Regs.AQCTLA.bit.CAD = 1;   /// Clear PWM1A on event A, down count
     EPwm3Regs.AQCTLA.bit.CAD = 1;   /// Clear PWM1A on event A, down count
 
-}
-
-void InitEPwmForceLow(void)
-{
-    // Initialize ePWM1
-    EPwm1Regs.AQCSFRC.bit.CSFA = AQ_CLEAR; // Force output A low
-    EPwm1Regs.AQCSFRC.bit.CSFB = AQ_CLEAR; // Force output B low
-
-    // Initialize ePWM2
-    EPwm2Regs.AQCSFRC.bit.CSFA = AQ_CLEAR; // Force output A low
-    EPwm2Regs.AQCSFRC.bit.CSFB = AQ_CLEAR; // Force output B low
-
-    // Initialize ePWM3
-    EPwm3Regs.AQCSFRC.bit.CSFA = AQ_CLEAR; // Force output A low
-    EPwm3Regs.AQCSFRC.bit.CSFB = AQ_CLEAR; // Force output B low
 }

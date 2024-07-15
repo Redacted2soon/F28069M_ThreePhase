@@ -1,5 +1,4 @@
 "./common/source/F2806x_Adc.obj"
-"./common/source/F2806x_CSMPasswords.obj"
 "./common/source/F2806x_CodeStartBranch.obj"
 "./common/source/F2806x_Comp.obj"
 "./common/source/F2806x_CpuTimers.obj"

@@ -6,7 +6,6 @@ SHELL = cmd.exe
 
 # Add inputs and outputs from these tool invocations to the build variables 
 ASM_SRCS += \
-C:/ti/c2000/C2000Ware_5_02_00_00/device_support/f2806x/common/source/F2806x_CSMPasswords.asm \
 C:/ti/c2000/C2000Ware_5_02_00_00/device_support/f2806x/common/source/F2806x_CodeStartBranch.asm \
 C:/ti/c2000/C2000Ware_5_02_00_00/device_support/f2806x/common/source/F2806x_DBGIER.asm \
 C:/ti/c2000/C2000Ware_5_02_00_00/device_support/f2806x/common/source/F2806x_DisInt.asm \
@@ -58,7 +57,6 @@ C_DEPS += \
 
 OBJS += \
 ./common/source/F2806x_Adc.obj \
-./common/source/F2806x_CSMPasswords.obj \
 ./common/source/F2806x_CodeStartBranch.obj \
 ./common/source/F2806x_Comp.obj \
 ./common/source/F2806x_CpuTimers.obj \
@@ -84,7 +82,6 @@ OBJS += \
 ./common/source/F2806x_usDelay.obj 
 
 ASM_DEPS += \
-./common/source/F2806x_CSMPasswords.d \
 ./common/source/F2806x_CodeStartBranch.d \
 ./common/source/F2806x_DBGIER.d \
 ./common/source/F2806x_DisInt.d \
@@ -92,7 +89,6 @@ ASM_DEPS += \
 
 OBJS__QUOTED += \
 "common\source\F2806x_Adc.obj" \
-"common\source\F2806x_CSMPasswords.obj" \
 "common\source\F2806x_CodeStartBranch.obj" \
 "common\source\F2806x_Comp.obj" \
 "common\source\F2806x_CpuTimers.obj" \
@@ -140,7 +136,6 @@ C_DEPS__QUOTED += \
 "common\source\F2806x_TempSensorConv.d" 
 
 ASM_DEPS__QUOTED += \
-"common\source\F2806x_CSMPasswords.d" \
 "common\source\F2806x_CodeStartBranch.d" \
 "common\source\F2806x_DBGIER.d" \
 "common\source\F2806x_DisInt.d" \
@@ -169,7 +164,6 @@ C_SRCS__QUOTED += \
 "C:/ti/c2000/C2000Ware_5_02_00_00/device_support/f2806x/common/source/F2806x_TempSensorConv.c" 
 
 ASM_SRCS__QUOTED += \
-"C:/ti/c2000/C2000Ware_5_02_00_00/device_support/f2806x/common/source/F2806x_CSMPasswords.asm" \
 "C:/ti/c2000/C2000Ware_5_02_00_00/device_support/f2806x/common/source/F2806x_CodeStartBranch.asm" \
 "C:/ti/c2000/C2000Ware_5_02_00_00/device_support/f2806x/common/source/F2806x_DBGIER.asm" \
 "C:/ti/c2000/C2000Ware_5_02_00_00/device_support/f2806x/common/source/F2806x_DisInt.asm" \
