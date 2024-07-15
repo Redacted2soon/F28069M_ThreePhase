@@ -2,12 +2,13 @@
 
 ## About
 
-This repository contains embedded software for a function generator implemented on the TMS320F28069M microcontroller. The function generator is capable of generating three-phase wave with configurable parameters such as frequency of PWM and wave, amplitude, offset and phase.
+This repository contains embedded software for a function generator implemented on the TMS320F28069M microcontroller. The function generator is capable of generating three-phase wave with configurable parameters such as: frequency of PWM and sin wave, modulation depth, offset, and phase (of each wave).
 
 ### Built With
 
 IDE: Code Composer Studio v12
 Compiler: TI v22.6.1 LTS
+HTerm 0.8.9
 
 ## Target
 
@@ -68,6 +69,26 @@ In summary:
 5. Merge your Pull Request.
 6. Delete your branch.
 
+### Program logic explained 
+The PWM (Pulse Width Modulation) logic creates the waveform by generating a sinusoidal signal modulated by a triangular carrier signal. Here’s a breakdown of how this logic works:
+1. Basic PWM Setup
+A higher PWM frequency means the ISR is triggered more frequently, allowing for more updates to the PWM duty cycle, which can improve accuracy and resolution of the output signal.
+Adjusting the sin frequency changes the rate at which the angle increments in the ISR. A higher sin frequency results in faster angle increments, which increases the frequency of the generated sinusoidal waveform.
+
+  PWM frequency: Determines the size of the pwm timer, the smallest value is 687 because the pwm counter is only 16 bits, 65535 > 90*10^6 / (PWM_FREQUENCY*2) .
+  Timer period (TBPRD): Calculated based on the system clock and the desired PWM frequency. The value of TBPRD sets the period of the triangle waveform that is used to modulate the duty cycle.
+   
+3. Sinusoidal Signal Generation
+  Angle Calculation: An angle is incremented in each ISR call to simulate the sinusoidal waveform.
+  Angle Increment (angleincrement): This value determines how fast the angle progresses based on the sinusoidal frequency.
+    float angleincrement = 2 * M_PI / (originalePwmParams.pwm_frequency / originalePwmParams.sin_frequency);
+  Wrap-around Logic: If the angle exceeds 2 * M_PI, it wraps around to keep it within the range of 0 to 2 * M_PI.
+
+4. Duty Cycle Calculation
+   Sine Calculation: The sine of the current angle, adjusted by a phase shift (angle_1, angle_2, angle_3), is used to create a sinusoidal modulation.
+    float duty_cycle = (sinf(angle + originalePwmParams.angle_1 * M_PI / 180.0) * originalePwmParams.modulation_depth + 1) * 0.5 - originalePwmParams.offset;
+
+Changing pwm freq changes what the pwm counter counts to (larger pwm freq = Smaller pwm count = more values = better resolution), 
 ## Acknowledgements
 
 This project has been developed by Ethan Robotham.
