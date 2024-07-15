@@ -20,7 +20,15 @@ The project is structured as a Code Composer Studio project.
 ### Prerequisites
 
 1. Download Code Composer Studio.
-2. Obtain the necessary hardware and software libraries (c2000ware).
+2. Download a serial terminal
+
+### Setting up Serial terminal
+
+1. Set: Correct port (found in device manager), baud rate to 9600, Data 8, Stop bit = 1, Parity = 0
+2. Newline at CR+LF
+3. Send on enter: NULL
+4. Set transmit and recieve on "Ascii"
+5. Click the "connect" button (In HTerm, disconnect should be shown once connect is pressed)
 
 ### Opening the Project
 
@@ -39,6 +47,9 @@ To run the project for development:
 3. Power up the electronics.
 4. Click Debug (bug icon).
 5. After the target has been flashed, click the start button (play icon).
+6. This screen should show up in the serial terminal
+![image](https://github.com/user-attachments/assets/20328408-a91d-4a27-ae49-3265f13b7e54)
+
 
 ### Running the Tests
 
