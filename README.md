@@ -8,7 +8,7 @@ This repository contains embedded software for a function generator implemented 
 
 IDE: Code Composer Studio v12
 Compiler: TI v22.6.1 LTS
-HTerm 0.8.9
+Serial terminal: HTerm 0.8.9
 
 ## Target
 
