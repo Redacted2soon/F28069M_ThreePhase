@@ -77,7 +77,7 @@ The PWM (Pulse Width Modulation) creates the waveform by generating a sinusoidal
   A higher PWM frequency means the ISR is triggered more frequently (smaller amout of clocks), allowing for more updates to the PWM duty cycle, which can improve accuracy and resolution of the output signal.
   Adjusting the sin frequency changes the rate at which the angle increments in the ISR. A higher sin frequency results in faster angle increments, which increases the frequency of the generated sinusoidal waveform.
 
- The smallest value for the PWM frequency is 687 because the pwm counter is only 16 bits, 65535 > 90*10^6 / (PWM_FREQUENCY*2).
+ The smallest value for the PWM frequency is 687 because the pwm counter is only 16 bits, 65535 > 90 * 10^6 / (PWM_FREQUENCY * 2).
    
 3. Sinusoidal Signal Generation
   Angle Calculation: An angle is incremented in each ISR call to simulate the sinusoidal waveform.
