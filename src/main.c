@@ -65,6 +65,7 @@ void Init_Epwmm(void);             // Initialize registers for ePWM 1, 2, and 3
 
 
 // Utility functions
+void handle_received_char(Uint16 ReceivedChar); // Handles a received character from SCI, processes input buffer for PWM parameters.
 int populate_variable(const char *arr, float *var, float min, float max,
                       int *pindex);             // Populates a float variable with a value from a given string, ensuring the value is within the specified range.
 int process_buffer(const char *buffer);         // Processes the input buffer to extract and update the PWM parameters.
@@ -143,9 +144,6 @@ void main(void)
 
     print_welcome_screen(); // Print the welcome message
 
-    // Buffer for incoming data and buffer index
-    static char buffer[MAX_BUFFER_SIZE];
-    Uint16 bufferIndex = 0;
     Uint16 ReceivedChar;
 
     // Main loop
@@ -155,63 +153,63 @@ void main(void)
         while (SciaRegs.SCIFFRX.bit.RXFFST < 1)
         {
         }
-
         ReceivedChar = SciaRegs.SCIRXBUF.all;  // Read received character
+        handle_received_char(ReceivedChar);
+    }
 
-        // Check for terminating character
-        if (ReceivedChar == '\0')
+}
+
+// Handles a received character from SCI
+void handle_received_char(Uint16 ReceivedChar)
+{
+    // Buffer for incoming data and buffer index
+    static char buffer[MAX_BUFFER_SIZE];
+    static Uint16 bufferIndex = 0;
+
+    // Check for terminating character
+    if (ReceivedChar == '\0')
+    {
+        //echo back user input
+        buffer[bufferIndex] = '\0';
+        scia_msg(NEWLINE NEWLINE "You sent: ");
+        scia_msg(buffer);
+
+        // Check for errors and confirmation of values
+        if (process_buffer(buffer) && confirm_values())
         {
-            //echo back user input
-            scia_msg(NEWLINE NEWLINE"You sent: ");
-            buffer[bufferIndex] = '\0';
-            scia_msg(buffer);
-
-            // Process the buffer
-            int confirm = process_buffer(buffer); //returns 0 if there's an error with input
-
-            if (confirm) // Checks if there was an error in processing
-            {
-                confirm = confirm_values(); // Allows user to confirm values, Y -> confirm = 1
-            }
-
-            // Confirm the values
-            if (confirm)
-            {
-                scia_msg(NEWLINE NEWLINE"Values confirmed and set.");
-                memcpy(&originalEpwmParams, &newEpwmParams, sizeof(EPwmParams)); // Copy new values to original
-                originalEpwmParams.epwmTimerTBPRD = (Uint32)(0.5 * (CLKRATE / originalEpwmParams.pwm_frequency));
-                Init_Epwmm();
-            }
-            else
-            {
-                scia_msg(NEWLINE NEWLINE"Values reset to:");
-                print_params(&originalEpwmParams);  // Print the original values
-            }
-
-            // Reset the buffer for the next input
-            bufferIndex = 0;
-            memset(buffer, 0, MAX_BUFFER_SIZE);
-            clear_scia_rx_buffer();
-            print_welcome_screen();  // Print the welcome message again
-
+            scia_msg(NEWLINE NEWLINE"Values confirmed and set.");
+            memcpy(&originalEpwmParams, &newEpwmParams, sizeof(EPwmParams)); // Copy new values to original
+            originalEpwmParams.epwmTimerTBPRD = (Uint32)(0.5 * (CLKRATE / originalEpwmParams.pwm_frequency));
+            Init_Epwmm();
         }
         else
         {
-            // Add character to buffer array if there's space
-            if (bufferIndex < MAX_BUFFER_SIZE - 1)
-            {
-                buffer[bufferIndex++] = ReceivedChar;
-            }
-            else
-            {
-                // Handle buffer overflow error
-                scia_msg(
-                        NEWLINE NEWLINE"Error: Input buffer overflow. Too many characters added. Buffer reset");
-                bufferIndex = 0; // Reset buffer index to avoid overflow
-                memset(buffer, 0, MAX_BUFFER_SIZE);
-                clear_scia_rx_buffer();
-                print_welcome_screen();  // Print the welcome message again
-            }
+            scia_msg(NEWLINE NEWLINE"Values reset to:");
+            print_params(&originalEpwmParams);  // Print the original values
+        }
+
+        // Reset the buffer for the next input
+        bufferIndex = 0;
+        memset(buffer, 0, MAX_BUFFER_SIZE);
+        clear_scia_rx_buffer();
+        print_welcome_screen();  // Print the welcome message again
+    }
+    else
+    {
+        // Add character to buffer array if there's space
+        if (bufferIndex < MAX_BUFFER_SIZE - 1)
+        {
+            buffer[bufferIndex++] = ReceivedChar;
+        }
+        else
+        {
+            // Handle buffer overflow error
+            scia_msg(
+                 NEWLINE NEWLINE"Error: Input buffer overflow. Buffer reset.");
+            bufferIndex = 0; // Reset buffer index to avoid overflow
+            memset(buffer, 0, MAX_BUFFER_SIZE);
+            clear_scia_rx_buffer();
+            print_welcome_screen();  // Print the welcome message again
         }
     }
 }
@@ -228,10 +226,11 @@ __interrupt void epwm1_isr(void)
 
     // If the angle exceeds 2*PI, wrap it around
     if (angle > 2 * M_PI)
-        angle = angle - 2 * M_PI;
+        angle -= 2 * M_PI;
 
-    // Calculate the duty cycle for the PWM signal (had to put angle1*pi/180 inside sin because angle is static
-    float duty_cycle = (sinf(angle + originalEpwmParams.angle_1 * M_PI / 180.0) * originalEpwmParams.modulation_depth + 1) * .5
+    // Calculate the duty cycle for the PWM signal
+    float angle_rad = angle + originalEpwmParams.angle_1 * M_PI / 180.0;
+    float duty_cycle = (sinf(angle_rad) * originalEpwmParams.modulation_depth + 1) * .5
             - originalEpwmParams.offset;
 
     // Set the compare value for the PWM signal
@@ -256,9 +255,10 @@ __interrupt void epwm2_isr(void)
     float angleincrement = 2 * M_PI / (originalEpwmParams.pwm_frequency / originalEpwmParams.sin_frequency);
 
     if (angle > 2 * M_PI)
-        angle = angle - 2 * M_PI;
+        angle -= 2 * M_PI;
 
-    float duty_cycle = (sinf(angle + originalEpwmParams.angle_2 * M_PI / 180.0) * originalEpwmParams.modulation_depth + 1) * .5 - originalEpwmParams.offset;
+    float angle_rad = angle + originalEpwmParams.angle_2 * M_PI / 180.0;
+    float duty_cycle = (sinf(angle_rad) * originalEpwmParams.modulation_depth + 1) * .5 - originalEpwmParams.offset;
 
     EPwm2Regs.CMPA.half.CMPA = (Uint32) ((duty_cycle) * ((float) originalEpwmParams.epwmTimerTBPRD));
 
@@ -275,9 +275,10 @@ __interrupt void epwm3_isr(void)
     float angleincrement = 2 * M_PI / (originalEpwmParams.pwm_frequency / originalEpwmParams.sin_frequency);
 
     if (angle > 2 * M_PI)
-        angle = angle - 2 * M_PI;
+        angle -= 2 * M_PI;
 
-    float duty_cycle = (sinf(angle + originalEpwmParams.angle_3 * M_PI / 180.0) * originalEpwmParams.modulation_depth + 1) * .5 - originalEpwmParams.offset;
+    float angle_rad = angle + originalEpwmParams.angle_3 * M_PI / 180.0;
+    float duty_cycle = (sinf(angle_rad) * originalEpwmParams.modulation_depth + 1) * .5 - originalEpwmParams.offset;
 
     EPwm3Regs.CMPA.half.CMPA = (Uint32) ((duty_cycle) * ((float) originalEpwmParams.epwmTimerTBPRD));
 
@@ -361,6 +362,7 @@ int process_buffer(const char *buffer)
         default:
             report_invalid_input(buffer[i]);
             error = 1;
+            break;
         }
     }
 
