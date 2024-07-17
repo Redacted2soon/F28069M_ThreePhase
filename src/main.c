@@ -29,7 +29,7 @@
 
 #define NEWLINE "\r\n" // Change depending on serial terminal new line character
 
-// Struct to hold PWM parameters
+// Declaration of struct to hold PWM parameters
 typedef struct
 {
     float pwm_frequency;
@@ -58,33 +58,34 @@ EPwmParams originalEpwmParams = {
 EPwmParams newEpwmParams;
 
 // Function Prototypes
-//Initialization
-void scia_echoback_init(void);
-void scia_fifo_init(void);
-void Init_Epwmm(void);
+// Peripheral initialization
+void scia_echoback_init(void);     // Rx and Tx register initialization
+void scia_fifo_init(void);         // Initialize registers the SCI FIFO
+void Init_Epwmm(void);             // Initialize registers for ePWM 1, 2, and 3
 
-//Utility functions
-void scia_xmit(int a);
-void scia_msg(const char *msg);
+
+// Utility functions
 int populate_variable(const char *arr, float *var, float min, float max,
-                      int *pindex);
-int process_buffer(const char *buffer);
-void report_invalid_input(char invalid_char);
-int confirm_values(void);
-void print_params(const EPwmParams *arr);
-void float_to_string(float value);
-void clear_scia_rx_buffer(void);
-void print_welcome_screen(void);
+                      int *pindex);             // Populates a float variable with a value from a given string, ensuring the value is within the specified range.
+int process_buffer(const char *buffer);         // Processes the input buffer to extract and update the PWM parameters.
+int confirm_values(void);                       // Prompts the user to confirm the new PWM values and returns the confirmation status.
+void print_params(const EPwmParams *arr);       // Prints the given PWM parameters to the serial terminal.
+void float_to_string(float value);              // Function to convert a float to a string and send it via SCI
+void report_invalid_input(char invalid_char);   // Reports an invalid input character via the serial terminal.
+void clear_scia_rx_buffer(void);                // Clears the SCI A RX buffer to remove any remaining data.
+void scia_msg(const char *msg);                 // Transmits a message (string) via the SCI.
+void scia_xmit(int asciiValue);                 // Transmits a single ASCII character via the SCI.
+void print_welcome_screen(void);                // Prints the welcome screen message to the serial terminal.
 
-///Interrupt service routines (ISRs)
-__interrupt void epwm1_isr(void);
-__interrupt void epwm2_isr(void);
-__interrupt void epwm3_isr(void);
+/// Interrupt service routines (ISRs)
+__interrupt void epwm1_isr(void);               // ISR for ePWM1: Generates a sinusoidal PWM signal with the specified parameters.
+__interrupt void epwm2_isr(void);               // ISR for ePWM2: Generates a sinusoidal PWM signal with the specified parameters.
+__interrupt void epwm3_isr(void);               // ISR for ePWM3: Generates a sinusoidal PWM signal with the specified parameters.
 
 // Main function
 void main(void)
 {
-    // Calculate the ePWM timer period
+    // Calculate the ePWM timer period, .5 is used because timer is in up/down count mode
     originalEpwmParams.epwmTimerTBPRD =
             (Uint32)(0.5 * (CLKRATE / originalEpwmParams.pwm_frequency));
 
@@ -287,7 +288,7 @@ __interrupt void epwm3_isr(void)
     PieCtrlRegs.PIEACK.all = PIEACK_GROUP3;
 }
 
-// Process the input buffer and extract PWM parameters
+// Processes the input buffer to extract and update the PWM parameters.
 int process_buffer(const char *buffer)
 {
 
@@ -375,7 +376,7 @@ int process_buffer(const char *buffer)
     return error ? 0 : 1;    //Returns 0 if there was an error
 }
 
-// Function to populate a variable from the buffer
+// Populates a float variable with a value from a given string, ensuring the value is within the specified range.
 int populate_variable(const char *arr, float *var, const float min, const float max,
                       int *pindex)
 {
@@ -436,7 +437,7 @@ int populate_variable(const char *arr, float *var, const float min, const float 
     return 0;
 }
 
-// Function to confirm the values with the user
+// Prompts the user to confirm the new PWM values and returns the confirmation status.
 int confirm_values(void)
 {
     Uint16 confirm = 0;
@@ -474,7 +475,7 @@ int confirm_values(void)
     return (confirm == 1) ? 1 : 0; //if Y in input, return 1
 }
 
-//prints to serial terminal
+// Prints the given PWM parameters to the serial terminal.
 void print_params(const EPwmParams *arr)
 {
     scia_msg(NEWLINE NEWLINE "PWM frequency = ");
@@ -499,7 +500,7 @@ void print_params(const EPwmParams *arr)
     float_to_string(arr->angle_3);
 }
 
-// Function to convert a float to a string and send it via SCI
+// Converts a float value to a string and sends it via SCI.
 void float_to_string(const float value)
 {
     // Assuming msg is large enough
@@ -529,7 +530,7 @@ void float_to_string(const float value)
     scia_msg(msg);
 }
 
-// Function to report invalid input
+// Reports an invalid input character via the serial terminal.
 void report_invalid_input(const char invalid_char)
 {
     char msg[50];
@@ -537,7 +538,7 @@ void report_invalid_input(const char invalid_char)
     scia_msg(msg);
 }
 
-// Function to clear the SCI A RX buffer
+// Clears the SCI A RX buffer to remove any remaining data.
 void clear_scia_rx_buffer()
 {
     while (SciaRegs.SCIFFRX.bit.RXFFST != 0)
@@ -546,27 +547,27 @@ void clear_scia_rx_buffer()
     }
 }
 
-// scia_xmit - Transmit a character from the SCI
-void scia_xmit(int a)
+// Transmits a single ASCII character via the SCI.
+void scia_xmit(int asciiValue)
 {
     while (SciaRegs.SCIFFTX.bit.TXFFST != 0)
     {
         // Wait for the transmit buffer to be empty
     }
-    SciaRegs.SCITXBUF = a; // Placed below to ensure that the transmit buffer is empty before attempting to send data
+    SciaRegs.SCITXBUF = asciiValue; // Placed below to ensure that the transmit buffer is empty before attempting to send data
 }
 
-// Transmit a message to the SCI
+// Transmits a message (string) via the SCI.
 void scia_msg(const char *msg)
 {
 
-    while (*msg) // Keeps transmitting data until end of line (enter has been pressed, denoted by '\0')
+    while (*msg)            // Keeps transmitting data until null character (enter has been pressed, denoted by '\0' which is 0 in ascii)
     {
-        scia_xmit(*msg++);
+        scia_xmit(*msg++);  // Passes through ASCII value than increments to next element
     }
 }
 
-// Function to print the welcome screen
+// Prints the welcome screen message to the serial terminal.
 void print_welcome_screen(void)
 {
     scia_msg(
@@ -590,7 +591,7 @@ void print_welcome_screen(void)
 
 }
 
-// Functions for SCI initialization and communication
+// SCI register initialization (Communication)
 void scia_echoback_init()
 {
     SciaRegs.SCICCR.all = 0x0007; // 1 stop bit,  No loopback, No parity, 8 char bits, async mode, idle-line protocol
@@ -608,7 +609,7 @@ void scia_echoback_init()
     SciaRegs.SCICTL1.all = 0x0023;  // Relinquish SCI from Reset
 }
 
-// scia_fifo_init - Initalize the SCI FIFO
+// Initialize registers the SCI FIFO
 void scia_fifo_init()
 {
     SciaRegs.SCIFFTX.all = 0xE040;
@@ -616,6 +617,7 @@ void scia_fifo_init()
     SciaRegs.SCIFFCT.all = 0x0;
 }
 
+// Initialize registers for ePWM 1, 2, and 3
 void Init_Epwmm()
 {
     ///setup sync
@@ -672,7 +674,6 @@ void Init_Epwmm()
     EPwm2Regs.TBCTL.bit.CLKDIV = TB_DIV1;           /// Clock ratio to SYSCLKOUT
     EPwm3Regs.TBCTL.bit.CLKDIV = TB_DIV1;           /// Clock ratio to SYSCLKOUT
 
-    ///shaddow
     EPwm1Regs.CMPCTL.bit.SHDWAMODE = CC_SHADOW;// Enable shadow mode for Compare A registers of ePWM1
     EPwm2Regs.CMPCTL.bit.SHDWAMODE = CC_SHADOW;// Enable shadow mode for Compare A registers of ePWM2
     EPwm3Regs.CMPCTL.bit.SHDWAMODE = CC_SHADOW;// Enable shadow mode for Compare A registers of ePWM3
