@@ -382,7 +382,7 @@ int process_buffer(const char *buffer)
 int populate_variable(const char *arr, float *var, const float min, const float max,
                       int *pindex)
 {
-    char temp[8] = { '\0' };  // Temporary array to hold input value
+    char temp[5] = { '\0' };  // Temporary array to hold input value
 
     int i = 1, j = 0, periodCount = 0;
 
@@ -398,11 +398,11 @@ int populate_variable(const char *arr, float *var, const float min, const float 
     while (arr[i] == ' ')
         i++;
 
-    // Extract the number
+    // Copies number from arr (buffer) to temp array
     while (arr[i] != '\0' && (arr[i] == '.' || arr[i] == '-' || (arr[i] >= '0' && arr[i] <= '9')))
     {
-        // Check if number is too big
-        if (j > 8)
+        // Check if number is too many digits, 5 because max digits is 5 (10000)
+        if (j > 5)
         {
             scia_msg(NEWLINE"Number input has too many digits");
             report_invalid_input(*temp);
