@@ -1,7 +1,7 @@
 ******************************************************************************
              TMS320C2000 Linker PC v22.6.1                     
 ******************************************************************************
->> Linked Mon Jul 15 15:26:50 2024
+>> Linked Wed Jul 17 09:58:22 2024
 
 OUTPUT FILE NAME:   <F28069M_ThreePhase.out>
 ENTRY POINT SYMBOL: "_c_int00"  address: 0000a04b
@@ -14,7 +14,7 @@ MEMORY CONFIGURATION
 PAGE 0:
   BEGIN                 00000000   00000002  00000002  00000000  RWIX
   RAMM0                 00000050   000003b0  00000044  0000036c  RWIX
-  RAML0_L7              00008000   0000a000  00002c26  000073da  RWIX
+  RAML0_L7              00008000   0000a000  00002c06  000073fa  RWIX
   FPUTABLES             003fd590   000006a0  00000000  000006a0  RWIX
   IQTABLES              003fdc30   00000b50  00000000  00000b50  RWIX
   IQTABLES2             003fe780   0000008c  00000000  0000008c  RWIX
@@ -162,28 +162,28 @@ ramfuncs   0    00000090    00000004
 .reset     0    003fffc0    00000002     DSECT
                   003fffc0    00000002     rts2800_fpu32.lib : boot28.asm.obj (.reset)
 
-.econst    0    0000a3f4    0000076a     
-                  0000a3f4    000004d0     main.obj (.econst:.string)
-                  0000a8c4    00000101     rts2800_fpu32.lib : ctype.c.obj (.econst:.string:__ctypes_)
-                  0000a9c5    00000001     --HOLE-- [fill = 0]
-                  0000a9c6    00000100     F2806x_PieVect.obj (.econst:_PieVectTableInit)
-                  0000aac6    00000026     rts2800_fpu32.lib : _printfi.c.obj (.econst:.string)
-                  0000aaec    00000020                       : strtod.c.obj (.econst:_digits)
-                  0000ab0c    0000001c                       : _printfi.c.obj (.econst)
-                  0000ab28    0000001c                       : s_scalbn.c.obj (.econst)
-                  0000ab44    0000000c                       : strtod.c.obj (.econst:_powerof10)
-                  0000ab50    00000008                       : s_frexp.c.obj (.econst)
-                  0000ab58    00000006                       : s_scalbnf.c.obj (.econst)
+.econst    0    0000a3f4    00000764     
+                  0000a3f4    000004ca     main.obj (.econst:.string)
+                  0000a8be    00000101     rts2800_fpu32.lib : ctype.c.obj (.econst:.string:__ctypes_)
+                  0000a9bf    00000001     --HOLE-- [fill = 0]
+                  0000a9c0    00000100     F2806x_PieVect.obj (.econst:_PieVectTableInit)
+                  0000aac0    00000026     rts2800_fpu32.lib : _printfi.c.obj (.econst:.string)
+                  0000aae6    00000020                       : strtod.c.obj (.econst:_digits)
+                  0000ab06    0000001c                       : _printfi.c.obj (.econst)
+                  0000ab22    0000001c                       : s_scalbn.c.obj (.econst)
+                  0000ab3e    0000000c                       : strtod.c.obj (.econst:_powerof10)
+                  0000ab4a    00000008                       : s_frexp.c.obj (.econst)
+                  0000ab52    00000006                       : s_scalbnf.c.obj (.econst)
 
-.ebss      0    0000ab5e    000000c8     UNINITIALIZED
-                  0000ab5e    00000018     F2806x_CpuTimers.obj (.ebss)
-                  0000ab76    00000006     rts2800_fpu32.lib : exit.c.obj (.ebss)
-                  0000ab7c    00000002                       : _lock.c.obj (.ebss:__lock)
-                  0000ab7e    00000002                       : _lock.c.obj (.ebss:__unlock)
+.ebss      0    0000ab58    000000ae     UNINITIALIZED
+                  0000ab58    00000026     main.obj (.ebss)
+                  0000ab7e    00000002     rts2800_fpu32.lib : _lock.c.obj (.ebss:__lock)
                   0000ab80    00000064     main.obj (.ebss:_buffer$1)
-                  0000abe4    00000001     rts2800_fpu32.lib : errno.c.obj (.ebss)
-                  0000abe5    0000001b     --HOLE--
-                  0000ac00    00000026     main.obj (.ebss)
+                  0000abe4    00000018     F2806x_CpuTimers.obj (.ebss)
+                  0000abfc    00000002     rts2800_fpu32.lib : _lock.c.obj (.ebss:__unlock)
+                  0000abfe    00000001                       : errno.c.obj (.ebss)
+                  0000abff    00000001     --HOLE--
+                  0000ac00    00000006                       : exit.c.obj (.ebss)
 
 .stack     1    00000400    00000300     UNINITIALIZED
                   00000400    00000300     --HOLE--
@@ -441,9 +441,9 @@ MODULE SUMMARY
        Total:                          0      0                  3550              
                                                                                    
     .\src\
-       main.obj                        1674   1266               138               
+       main.obj                        1674   1260               138               
     +--+-------------------------------+------+------------------+--------------------+
-       Total:                          1674   1266               138               
+       Total:                          1674   1260               138               
                                                                                    
     C:\ti\ccs1271\ccs\tools\compiler\ti-cgt-c2000_22.6.1.LTS\lib\rts2800_fpu32.lib
        _printfi.c.obj                  3269   66                 0                 
@@ -495,7 +495,7 @@ MODULE SUMMARY
                                                                                    
        Stack:                          0      0                  768               
     +--+-------------------------------+------+------------------+--------------------+
-       Grand Total:                    9210   1959               4491              
+       Grand Total:                    9210   1953               4491              
 
 
 GLOBAL DATA SYMBOLS: SORTED BY DATA PAGE
@@ -599,23 +599,23 @@ address     data page           name
 
 00007900     1e4 (00007900)     _I2caRegs
 
-0000a8c4     2a3 (0000a8c0)     __ctypes_
+0000a8be     2a2 (0000a880)     __ctypes_
 
-0000a9c6     2a7 (0000a9c0)     _PieVectTableInit
+0000a9c0     2a7 (0000a9c0)     _PieVectTableInit
 
-0000ab5e     2ad (0000ab40)     _CpuTimer0
-0000ab66     2ad (0000ab40)     _CpuTimer1
-0000ab6e     2ad (0000ab40)     _CpuTimer2
-0000ab76     2ad (0000ab40)     ___TI_enable_exit_profile_output
-0000ab78     2ad (0000ab40)     ___TI_cleanup_ptr
-0000ab7a     2ad (0000ab40)     ___TI_dtors_ptr
-0000ab7c     2ad (0000ab40)     __lock
-0000ab7e     2ad (0000ab40)     __unlock
+0000ab5e     2ad (0000ab40)     _originalEpwmParams
+0000ab6e     2ad (0000ab40)     _newEpwmParams
+0000ab7e     2ad (0000ab40)     __lock
 
-0000abe4     2af (0000abc0)     _errno
+0000abe4     2af (0000abc0)     _CpuTimer0
+0000abec     2af (0000abc0)     _CpuTimer1
+0000abf4     2af (0000abc0)     _CpuTimer2
+0000abfc     2af (0000abc0)     __unlock
+0000abfe     2af (0000abc0)     _errno
 
-0000ac06     2b0 (0000ac00)     _originalePwmParams
-0000ac16     2b0 (0000ac00)     _newEpwmParams
+0000ac00     2b0 (0000ac00)     ___TI_enable_exit_profile_output
+0000ac02     2b0 (0000ac00)     ___TI_cleanup_ptr
+0000ac04     2b0 (0000ac00)     ___TI_dtors_ptr
 
 003d7e80    f5fa (003d7e80)     _PartIdRegs
 
@@ -676,11 +676,11 @@ page  address   name
 1     00006400  _Comp1Regs                      
 1     00006420  _Comp2Regs                      
 1     00006440  _Comp3Regs                      
-0     0000ab5e  _CpuTimer0                      
+0     0000abe4  _CpuTimer0                      
 1     00000c00  _CpuTimer0Regs                  
-0     0000ab66  _CpuTimer1                      
+0     0000abec  _CpuTimer1                      
 1     00000c08  _CpuTimer1Regs                  
-0     0000ab6e  _CpuTimer2                      
+0     0000abf4  _CpuTimer2                      
 1     00000c10  _CpuTimer2Regs                  
 1     003f7ff8  _CsmPwl                         
 1     00000ae0  _CsmRegs                        
@@ -801,7 +801,7 @@ page  address   name
 1     003d7e80  _PartIdRegs                     
 1     00000ce0  _PieCtrlRegs                    
 1     00000d00  _PieVectTable                   
-0     0000a9c6  _PieVectTableInit               
+0     0000a9c0  _PieVectTableInit               
 0     00009199  _RTOSINT_ISR                    
 0     00000094  _RamfuncsLoadEnd                
 abs   00000004  _RamfuncsLoadSize               
@@ -846,9 +846,9 @@ abs   00000004  _RamfuncsLoadSize
 0     00009a48  _XtalOscSel                     
 1     00000700  __STACK_END                     
 abs   00000300  __STACK_SIZE                    
-0     0000ab78  ___TI_cleanup_ptr               
-0     0000ab7a  ___TI_dtors_ptr                 
-0     0000ab76  ___TI_enable_exit_profile_output
+0     0000ac02  ___TI_cleanup_ptr               
+0     0000ac04  ___TI_dtors_ptr                 
+0     0000ac00  ___TI_enable_exit_profile_output
 0     0000a134  ___TI_ltoa                      
 abs   ffffffff  ___TI_pprof_out_hndl            
 0     00008b40  ___TI_printfi                   
@@ -861,15 +861,15 @@ abs   ffffffff  ___c_args__
 abs   ffffffff  ___pinit__                      
 0     00008000  ___text__                       
 0     0000a35f  __args_main                     
-0     0000a8c4  __ctypes_                       
-0     0000ab7c  __lock                          
+0     0000a8be  __ctypes_                       
+0     0000ab7e  __lock                          
 0     0000a3b4  __nop                           
 0     0000a3b0  __register_lock                 
 0     0000a3ac  __register_unlock               
 1     00000400  __stack                         
 0     0000a3f3  __system_post_cinit             
 0     0000a3f1  __system_pre_init               
-0     0000ab7e  __unlock                        
+0     0000abfc  __unlock                        
 0     0000a1b8  _abort                          
 0     0000a3ea  _atof                           
 0     0000a0d3  _atoi                           
@@ -883,7 +883,7 @@ abs   ffffffff  ___pinit__
 0     00009715  _epwm1_isr                      
 0     000097b1  _epwm2_isr                      
 0     0000984d  _epwm3_isr                      
-0     0000abe4  _errno                          
+0     0000abfe  _errno                          
 0     0000a1ba  _exit                           
 0     00008fce  _float_to_string                
 0     00009f99  _frexpl                         
@@ -894,8 +894,8 @@ abs   ffffffff  ___pinit__
 0     0000a382  _memccpy                        
 0     0000a2f2  _memcpy                         
 0     0000a3de  _memset                         
-0     0000ac16  _newEpwmParams                  
-0     0000ac06  _originalePwmParams             
+0     0000ab6e  _newEpwmParams                  
+0     0000ab5e  _originalEpwmParams             
 0     00008ea0  _populate_variable              
 0     00008f85  _print_params                   
 0     0000904c  _print_welcome_screen           
@@ -1144,19 +1144,19 @@ page  address   name
 0     0000a3f3  __system_post_cinit             
 0     0000a3f4  ___etext__                      
 0     0000a3f4  etext                           
-0     0000a8c4  __ctypes_                       
-0     0000a9c6  _PieVectTableInit               
-0     0000ab5e  _CpuTimer0                      
-0     0000ab66  _CpuTimer1                      
-0     0000ab6e  _CpuTimer2                      
-0     0000ab76  ___TI_enable_exit_profile_output
-0     0000ab78  ___TI_cleanup_ptr               
-0     0000ab7a  ___TI_dtors_ptr                 
-0     0000ab7c  __lock                          
-0     0000ab7e  __unlock                        
-0     0000abe4  _errno                          
-0     0000ac06  _originalePwmParams             
-0     0000ac16  _newEpwmParams                  
+0     0000a8be  __ctypes_                       
+0     0000a9c0  _PieVectTableInit               
+0     0000ab5e  _originalEpwmParams             
+0     0000ab6e  _newEpwmParams                  
+0     0000ab7e  __lock                          
+0     0000abe4  _CpuTimer0                      
+0     0000abec  _CpuTimer1                      
+0     0000abf4  _CpuTimer2                      
+0     0000abfc  __unlock                        
+0     0000abfe  _errno                          
+0     0000ac00  ___TI_enable_exit_profile_output
+0     0000ac02  ___TI_cleanup_ptr               
+0     0000ac04  ___TI_dtors_ptr                 
 1     00000400  __stack                         
 1     00000700  __STACK_END                     
 1     00000880  _DevEmuRegs                     

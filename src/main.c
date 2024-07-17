@@ -43,7 +43,7 @@ typedef struct
 } EPwmParams;
 
 // Initialize default PWM parameters
-EPwmParams originalePwmParams = {
+EPwmParams originalEpwmParams = {
         .pwm_frequency = 2500,      // frequency of pwm DO NOT GO BELOW 687Hz, counter wont work properly 65535 < 90*10^6 / (687*2)
         .sin_frequency = 60,        // sin frequency 0-150Hz
         .modulation_depth = 1.0,    // modulation depth between 0 and 1
@@ -58,8 +58,12 @@ EPwmParams originalePwmParams = {
 EPwmParams newEpwmParams;
 
 // Function Prototypes
+//Initialization
 void scia_echoback_init(void);
 void scia_fifo_init(void);
+void Init_Epwmm(void);
+
+//Utility functions
 void scia_xmit(int a);
 void scia_msg(const char *msg);
 int populate_variable(const char *arr, float *var, float min, float max,
@@ -71,9 +75,8 @@ void print_params(const EPwmParams *arr);
 void float_to_string(float value);
 void clear_scia_rx_buffer(void);
 void print_welcome_screen(void);
-void Init_Epwmm(void);
 
-///prototypes for interrupt service routines (ISRs)
+///Interrupt service routines (ISRs)
 __interrupt void epwm1_isr(void);
 __interrupt void epwm2_isr(void);
 __interrupt void epwm3_isr(void);
@@ -82,10 +85,11 @@ __interrupt void epwm3_isr(void);
 void main(void)
 {
     // Calculate the ePWM timer period
-    originalePwmParams.epwmTimerTBPRD = (Uint32)(0.5 * (CLKRATE / originalePwmParams.pwm_frequency));
+    originalEpwmParams.epwmTimerTBPRD =
+            (Uint32)(0.5 * (CLKRATE / originalEpwmParams.pwm_frequency));
 
     // Copy default PWM parameters to new PWM parameters
-    memcpy(&newEpwmParams, &originalePwmParams, sizeof(EPwmParams));
+    memcpy(&newEpwmParams, &originalEpwmParams, sizeof(EPwmParams));
 
     /// System initialization
     InitSysCtrl();
@@ -173,14 +177,14 @@ void main(void)
             if (confirm)
             {
                 scia_msg(NEWLINE NEWLINE"Values confirmed and set.");
-                memcpy(&originalePwmParams, &newEpwmParams, sizeof(EPwmParams)); // Copy new values to original
-                originalePwmParams.epwmTimerTBPRD = (Uint32)(0.5 * (CLKRATE / originalePwmParams.pwm_frequency));
+                memcpy(&originalEpwmParams, &newEpwmParams, sizeof(EPwmParams)); // Copy new values to original
+                originalEpwmParams.epwmTimerTBPRD = (Uint32)(0.5 * (CLKRATE / originalEpwmParams.pwm_frequency));
                 Init_Epwmm();
             }
             else
             {
                 scia_msg(NEWLINE NEWLINE"Values reset to:");
-                print_params(&originalePwmParams);  // Print the original values
+                print_params(&originalEpwmParams);  // Print the original values
             }
 
             // Reset the buffer for the next input
@@ -219,19 +223,19 @@ __interrupt void epwm1_isr(void)
 
     // Calculate the angle increment per PWM cycle
     float angleincrement = 2 * M_PI
-            /(originalePwmParams.pwm_frequency / originalePwmParams.sin_frequency);
+            /(originalEpwmParams.pwm_frequency / originalEpwmParams.sin_frequency);
 
     // If the angle exceeds 2*PI, wrap it around
     if (angle > 2 * M_PI)
         angle = angle - 2 * M_PI;
 
     // Calculate the duty cycle for the PWM signal (had to put angle1*pi/180 inside sin because angle is static
-    float duty_cycle = (sinf(angle + originalePwmParams.angle_1 * M_PI / 180.0) * originalePwmParams.modulation_depth + 1) * .5
-            - originalePwmParams.offset;
+    float duty_cycle = (sinf(angle + originalEpwmParams.angle_1 * M_PI / 180.0) * originalEpwmParams.modulation_depth + 1) * .5
+            - originalEpwmParams.offset;
 
     // Set the compare value for the PWM signal
     EPwm1Regs.CMPA.half.CMPA = (Uint32) ((duty_cycle)
-            * ((float) originalePwmParams.epwmTimerTBPRD));
+            * ((float) originalEpwmParams.epwmTimerTBPRD));
 
     // Increment the angle for the next cycle
     angle += angleincrement;
@@ -248,14 +252,14 @@ __interrupt void epwm2_isr(void)
 {
     static float angle = 0;
 
-    float angleincrement = 2 * M_PI / (originalePwmParams.pwm_frequency / originalePwmParams.sin_frequency);
+    float angleincrement = 2 * M_PI / (originalEpwmParams.pwm_frequency / originalEpwmParams.sin_frequency);
 
     if (angle > 2 * M_PI)
         angle = angle - 2 * M_PI;
 
-    float duty_cycle = (sinf(angle + originalePwmParams.angle_2 * M_PI / 180.0) * originalePwmParams.modulation_depth + 1) * .5 - originalePwmParams.offset;
+    float duty_cycle = (sinf(angle + originalEpwmParams.angle_2 * M_PI / 180.0) * originalEpwmParams.modulation_depth + 1) * .5 - originalEpwmParams.offset;
 
-    EPwm2Regs.CMPA.half.CMPA = (Uint32) ((duty_cycle) * ((float) originalePwmParams.epwmTimerTBPRD));
+    EPwm2Regs.CMPA.half.CMPA = (Uint32) ((duty_cycle) * ((float) originalEpwmParams.epwmTimerTBPRD));
 
     angle += angleincrement;
 
@@ -267,14 +271,14 @@ __interrupt void epwm3_isr(void)
 {
     static float angle = 0;
 
-    float angleincrement = 2 * M_PI / (originalePwmParams.pwm_frequency / originalePwmParams.sin_frequency);
+    float angleincrement = 2 * M_PI / (originalEpwmParams.pwm_frequency / originalEpwmParams.sin_frequency);
 
     if (angle > 2 * M_PI)
         angle = angle - 2 * M_PI;
 
-    float duty_cycle = (sinf(angle + originalePwmParams.angle_3 * M_PI / 180.0) * originalePwmParams.modulation_depth + 1) * .5 - originalePwmParams.offset;
+    float duty_cycle = (sinf(angle + originalEpwmParams.angle_3 * M_PI / 180.0) * originalEpwmParams.modulation_depth + 1) * .5 - originalEpwmParams.offset;
 
-    EPwm3Regs.CMPA.half.CMPA = (Uint32) ((duty_cycle) * ((float) originalePwmParams.epwmTimerTBPRD));
+    EPwm3Regs.CMPA.half.CMPA = (Uint32) ((duty_cycle) * ((float) originalEpwmParams.epwmTimerTBPRD));
 
     angle += angleincrement;
 
@@ -363,7 +367,7 @@ int process_buffer(const char *buffer)
     if (newEpwmParams.offset > (1 - newEpwmParams.modulation_depth) / 2
             || newEpwmParams.offset < -(1 - newEpwmParams.modulation_depth) / 2)
     {
-        newEpwmParams.offset = originalePwmParams.offset;
+        newEpwmParams.offset = originalEpwmParams.offset;
         scia_msg(NEWLINE NEWLINE"Offset out of range");
         error = 1;
     }
@@ -626,15 +630,15 @@ void Init_Epwmm()
 
     ///sets the phase angle for each wave
     EPwm1Regs.TBPHS.half.TBPHS =
-            (Uint16) (originalePwmParams.angle_1 / (360) * (originalePwmParams.epwmTimerTBPRD));
+            (Uint16) (originalEpwmParams.angle_1 / (360) * (originalEpwmParams.epwmTimerTBPRD));
     EPwm2Regs.TBPHS.half.TBPHS =
-            (Uint16) (originalePwmParams.angle_1 / (360) * (originalePwmParams.epwmTimerTBPRD));
+            (Uint16) (originalEpwmParams.angle_1 / (360) * (originalEpwmParams.epwmTimerTBPRD));
     EPwm3Regs.TBPHS.half.TBPHS =
-            (Uint16) (originalePwmParams.angle_1 / (360) * (originalePwmParams.epwmTimerTBPRD));
+            (Uint16) (originalEpwmParams.angle_1 / (360) * (originalEpwmParams.epwmTimerTBPRD));
 
-    EPwm1Regs.TBPRD = originalePwmParams.epwmTimerTBPRD;         /// Set timer period
-    EPwm2Regs.TBPRD = originalePwmParams.epwmTimerTBPRD;         /// Set timer period
-    EPwm3Regs.TBPRD = originalePwmParams.epwmTimerTBPRD;         /// Set timer period
+    EPwm1Regs.TBPRD = originalEpwmParams.epwmTimerTBPRD;         /// Set timer period
+    EPwm2Regs.TBPRD = originalEpwmParams.epwmTimerTBPRD;         /// Set timer period
+    EPwm3Regs.TBPRD = originalEpwmParams.epwmTimerTBPRD;         /// Set timer period
 
     EPwm1Regs.TBCTR = 0x0000;                   /// Clear counter
     EPwm2Regs.TBCTR = 0x0000;                   /// Clear counter
