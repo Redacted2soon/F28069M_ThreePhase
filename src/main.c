@@ -7,6 +7,10 @@
  * Make sure terminating character is sent with data (marks end)
  */
 
+
+// All main logic for PWM occurs at interrupt
+// Interrupts occur when counter resets to 0
+
 // Included Files
 #include "DSP28x_Project.h"     // Device Headerfile and Examples Include File
 #include <stdlib.h>
@@ -15,54 +19,56 @@
 #include <string.h>
 
 ///Define Valid Ranges for parameters
-#define PWM_FREQUENCY_MIN 687
-#define PWM_FREQUENCY_MAX 10000
-#define SIN_FREQUENCY_MIN 0
-#define SIN_FREQUENCY_MAX 300
+#define pwmWavFreq_MIN 687
+#define pwmWavFreq_MAX 10000
+#define sinWavFreq_MIN 0
+#define sinWavFreq_MAX 300
 #define MODULATION_DEPTH_MIN 0.0
 #define MODULATION_DEPTH_MAX 1.0
-#define CLKRATE 90.0*1000000.0
+#define SYSCLK 90.0*1000000.0
 #define MIN_ANGLE -360
 #define MAX_ANGLE 360
 #define MAX_BUFFER_SIZE 100
 #define MAX_MSG_SIZE 100
+
+#define FOREVER 1
 
 #define NEWLINE "\r\n" // Change depending on serial terminal new line character
 
 // Declaration of struct to hold PWM parameters
 typedef struct
 {
-    float pwm_frequency;
-    float sin_frequency;
+    float pwmWavFreq;
+    float sinWavFreq;
     float modulation_depth;
     float offset;
-    float angle_1;
-    float angle_2;
-    float angle_3;
+    float phaseLead1;
+    float phaseLead2;
+    float phaseLead3;
     Uint32 epwmTimerTBPRD;
 } EPwmParams;
 
 // Initialize default PWM parameters
-EPwmParams originalEpwmParams = {
-        .pwm_frequency = 2500,      // frequency of pwm DO NOT GO BELOW 687Hz, counter wont work properly 65535 < 90*10^6 / (687*2)
-        .sin_frequency = 60,        // sin frequency 0-150Hz
+EPwmParams liveEpwmParams = {
+        .pwmWavFreq = 2500,      // frequency of pwm DO NOT GO BELOW 687Hz, counter wont work properly 65535 < 90*10^6 / (687*2)
+        .sinWavFreq = 60,        // sin frequency 0-150Hz
         .modulation_depth = 1.0,    // modulation depth between 0 and 1
         .offset = 0.0,              // make sure offset is between +-(1-MODULATION_DEPTH)/2
-        .angle_1 = 0,               // Phase shift angle in degree
-        .angle_2 = 120,             // Phase shift angle in degree
-        .angle_3 = 240,             // Phase shift angle in degree
+        .phaseLead1 = 0,               // Phase shift angle in degree
+        .phaseLead2 = 120,             // Phase shift angle in degree
+        .phaseLead3 = 240,             // Phase shift angle in degree
         .epwmTimerTBPRD = 0
 };
 
 // Struct for new PWM parameters
-EPwmParams newEpwmParams;
+EPwmParams bufferEpwmParams;
 
 // Function Prototypes
 // Peripheral initialization
 void scia_echoback_init(void);     // Rx and Tx register initialization
 void scia_fifo_init(void);         // Initialize registers the SCI FIFO
 void Init_Epwmm(void);             // Initialize registers for ePWM 1, 2, and 3
-
+void init_interrupts(void);
 
 // Utility functions
 void handle_received_char(Uint16 ReceivedChar); // Handles a received character from SCI, processes input buffer for PWM parameters.
@@ -87,11 +93,11 @@ __interrupt void epwm3_isr(void);               // ISR for ePWM3: Generates a si
 void main(void)
 {
     // Calculate the ePWM timer period, .5 is used because timer is in up/down count mode
-    originalEpwmParams.epwmTimerTBPRD =
-            (Uint32)(0.5 * (CLKRATE / originalEpwmParams.pwm_frequency));
+    liveEpwmParams.epwmTimerTBPRD =
+            (Uint32)(0.5 * (SYSCLK / liveEpwmParams.pwmWavFreq));
 
     // Copy default PWM parameters to new PWM parameters
-    memcpy(&newEpwmParams, &originalEpwmParams, sizeof(EPwmParams));
+    memcpy(&bufferEpwmParams, &liveEpwmParams, sizeof(EPwmParams));
 
     /// System initialization
     InitSysCtrl();
@@ -101,53 +107,15 @@ void main(void)
     InitEPwm1Gpio();
     InitEPwm2Gpio();
     InitEPwm3Gpio();
+    init_interrupts();
 
-    DINT; /// Disable CPU interrupts
-
-    /// Initialize the PIE control registers to their default state
-    InitPieCtrl();
-
-    IER = 0x0000; /// Clear all CPU interrupt flags
-    IFR = 0x0000; /// Clear all CPU interrupt flags
-
-    /// Initialize the PIE vector table with pointers to the ISR
-    InitPieVectTable();
-
-    EALLOW; /// This is needed to write to EALLOW protected registers
-    PieVectTable.EPWM1_INT = &epwm1_isr;
-    PieVectTable.EPWM2_INT = &epwm2_isr;
-    PieVectTable.EPWM3_INT = &epwm3_isr;
-    EDIS; /// This is needed to disable write to EALLOW protected registers
-
-    /// Initialize the ePWM modules, uncomment if you want epwm to initialize on startup
-    /*
-    EALLOW;
-    SysCtrlRegs.PCLKCR0.bit.TBCLKSYNC = 0; /// Disable TBCLK within the ePWM
-    EDIS;
-
-    Init_Epwmm();
-
-    EALLOW;
-    SysCtrlRegs.PCLKCR0.bit.TBCLKSYNC = 1; /// Enable TBCLK within the ePWM
-    EDIS;
-    */
-
-    IER |= M_INT3; /// Enable CPU INT3 which is connected to EPWM1-3 INT
-
-    /// Enable EPWM INTn in the PIE: Group 3 interrupt 1-3
-    PieCtrlRegs.PIEIER3.bit.INTx1 = 1;
-    PieCtrlRegs.PIEIER3.bit.INTx2 = 1;
-    PieCtrlRegs.PIEIER3.bit.INTx3 = 1;
-
-    EINT;    /// Enable Global interrupt INTM
-    ERTM;    /// Enable Global real time interrupt DBGM
 
     print_welcome_screen(); // Print the welcome message
 
     Uint16 ReceivedChar;
 
-    // Main loop
-    while (1)
+    // Process user communications from serial port and write to global structure to reconfigure PWM to generate different sin wave outputs
+    while (FOREVER)
     {
         // Wait for a character to be received
         while (SciaRegs.SCIFFRX.bit.RXFFST < 1)
@@ -178,14 +146,15 @@ void handle_received_char(Uint16 ReceivedChar)
         if (process_buffer(buffer) && confirm_values())
         {
             scia_msg(NEWLINE NEWLINE"Values confirmed and set.");
-            memcpy(&originalEpwmParams, &newEpwmParams, sizeof(EPwmParams)); // Copy new values to original
-            originalEpwmParams.epwmTimerTBPRD = (Uint32)(0.5 * (CLKRATE / originalEpwmParams.pwm_frequency));
+            memcpy(&liveEpwmParams, &bufferEpwmParams, sizeof(EPwmParams)); // Copy new values to original
+            liveEpwmParams.epwmTimerTBPRD = (Uint32)(0.5 * (SYSCLK / liveEpwmParams.pwmWavFreq));
             Init_Epwmm();
         }
         else
         {
             scia_msg(NEWLINE NEWLINE"Values reset to:");
-            print_params(&originalEpwmParams);  // Print the original values
+            print_params(&liveEpwmParams);  // Print the original values
+            memcpy(&bufferEpwmParams, &liveEpwmParams, sizeof(EPwmParams)); // Copy old values
         }
 
         // Reset the buffer for the next input
@@ -222,20 +191,20 @@ __interrupt void epwm1_isr(void)
 
     // Calculate the angle increment per PWM cycle
     float angleincrement = 2 * M_PI
-            /(originalEpwmParams.pwm_frequency / originalEpwmParams.sin_frequency);
+            /(liveEpwmParams.pwmWavFreq / liveEpwmParams.sinWavFreq);
 
     // If the angle exceeds 2*PI, wrap it around
     if (angle > 2 * M_PI)
         angle -= 2 * M_PI;
 
     // Calculate the duty cycle for the PWM signal
-    float angle_rad = angle + originalEpwmParams.angle_1 * M_PI / 180.0;
-    float duty_cycle = (sinf(angle_rad) * originalEpwmParams.modulation_depth + 1) * .5
-            - originalEpwmParams.offset;
+    float angle_rad = angle + liveEpwmParams.phaseLead1 * M_PI / 180.0;
+    float duty_cycle = (sinf(angle_rad) * liveEpwmParams.modulation_depth + 1) * .5
+            - liveEpwmParams.offset;
 
     // Set the compare value for the PWM signal
     EPwm1Regs.CMPA.half.CMPA = (Uint32) ((duty_cycle)
-            * ((float) originalEpwmParams.epwmTimerTBPRD));
+            * ((float) liveEpwmParams.epwmTimerTBPRD));
 
     // Increment the angle for the next cycle
     angle += angleincrement;
@@ -252,15 +221,15 @@ __interrupt void epwm2_isr(void)
 {
     static float angle = 0;
 
-    float angleincrement = 2 * M_PI / (originalEpwmParams.pwm_frequency / originalEpwmParams.sin_frequency);
+    float angleincrement = 2 * M_PI / (liveEpwmParams.pwmWavFreq / liveEpwmParams.sinWavFreq);
 
     if (angle > 2 * M_PI)
         angle -= 2 * M_PI;
 
-    float angle_rad = angle + originalEpwmParams.angle_2 * M_PI / 180.0;
-    float duty_cycle = (sinf(angle_rad) * originalEpwmParams.modulation_depth + 1) * .5 - originalEpwmParams.offset;
+    float angle_rad = angle + liveEpwmParams.phaseLead2 * M_PI / 180.0;
+    float duty_cycle = (sinf(angle_rad) * liveEpwmParams.modulation_depth + 1) * .5 - liveEpwmParams.offset;
 
-    EPwm2Regs.CMPA.half.CMPA = (Uint32) ((duty_cycle) * ((float) originalEpwmParams.epwmTimerTBPRD));
+    EPwm2Regs.CMPA.half.CMPA = (Uint32) ((duty_cycle) * ((float) liveEpwmParams.epwmTimerTBPRD));
 
     angle += angleincrement;
 
@@ -272,15 +241,15 @@ __interrupt void epwm3_isr(void)
 {
     static float angle = 0;
 
-    float angleincrement = 2 * M_PI / (originalEpwmParams.pwm_frequency / originalEpwmParams.sin_frequency);
+    float angleincrement = 2 * M_PI / (liveEpwmParams.pwmWavFreq / liveEpwmParams.sinWavFreq);
 
     if (angle > 2 * M_PI)
         angle -= 2 * M_PI;
 
-    float angle_rad = angle + originalEpwmParams.angle_3 * M_PI / 180.0;
-    float duty_cycle = (sinf(angle_rad) * originalEpwmParams.modulation_depth + 1) * .5 - originalEpwmParams.offset;
+    float angle_rad = angle + liveEpwmParams.phaseLead3 * M_PI / 180.0;
+    float duty_cycle = (sinf(angle_rad) * liveEpwmParams.modulation_depth + 1) * .5 - liveEpwmParams.offset;
 
-    EPwm3Regs.CMPA.half.CMPA = (Uint32) ((duty_cycle) * ((float) originalEpwmParams.epwmTimerTBPRD));
+    EPwm3Regs.CMPA.half.CMPA = (Uint32) ((duty_cycle) * ((float) liveEpwmParams.epwmTimerTBPRD));
 
     angle += angleincrement;
 
@@ -308,27 +277,27 @@ int process_buffer(const char *buffer)
         case 'P':
         case 'p':
             error = populate_variable(&(buffer[i]),
-                                      &newEpwmParams.pwm_frequency,
-                                      PWM_FREQUENCY_MIN,
-                                      PWM_FREQUENCY_MAX, &i);
+                                      &bufferEpwmParams.pwmWavFreq,
+                                      pwmWavFreq_MIN,
+                                      pwmWavFreq_MAX, &i);
             break;
         case 'S':
         case 's':
             error = populate_variable(&(buffer[i]),
-                                      &newEpwmParams.sin_frequency,
-                                      SIN_FREQUENCY_MIN,
-                                      SIN_FREQUENCY_MAX, &i);
+                                      &bufferEpwmParams.sinWavFreq,
+                                      sinWavFreq_MIN,
+                                      sinWavFreq_MAX, &i);
             break;
         case 'M':
         case 'm':
             error = populate_variable(&(buffer[i]),
-                                      &newEpwmParams.modulation_depth,
+                                      &bufferEpwmParams.modulation_depth,
                                       MODULATION_DEPTH_MIN,
                                       MODULATION_DEPTH_MAX, &i);
             break;
         case 'O':
         case 'o':
-            error = populate_variable(&(buffer[i]), &newEpwmParams.offset, -1,
+            error = populate_variable(&(buffer[i]), &bufferEpwmParams.offset, -1,
                                       1, &i);
             break;
         case 'A':
@@ -336,19 +305,19 @@ int process_buffer(const char *buffer)
             i++;
             if (buffer[i] == '1')
             {
-                error = populate_variable(&buffer[i], &newEpwmParams.angle_1,
+                error = populate_variable(&buffer[i], &bufferEpwmParams.phaseLead1,
                 MIN_ANGLE,
                                           MAX_ANGLE, &i);
             }
             else if (buffer[i] == '2')
             {
-                error = populate_variable(&buffer[i], &newEpwmParams.angle_2,
+                error = populate_variable(&buffer[i], &bufferEpwmParams.phaseLead2,
                 MIN_ANGLE,
                                           MAX_ANGLE, &i);
             }
             else if (buffer[i] == '3')
             {
-                error = populate_variable(&buffer[i], &newEpwmParams.angle_3,
+                error = populate_variable(&buffer[i], &bufferEpwmParams.phaseLead3,
                 MIN_ANGLE,
                                           MAX_ANGLE, &i);
             }
@@ -367,10 +336,10 @@ int process_buffer(const char *buffer)
     }
 
     // Check offset range (since offset depends on modulation depth
-    if (newEpwmParams.offset > (1 - newEpwmParams.modulation_depth) / 2
-            || newEpwmParams.offset < -(1 - newEpwmParams.modulation_depth) / 2)
+    if (bufferEpwmParams.offset > (1 - bufferEpwmParams.modulation_depth) / 2
+            || bufferEpwmParams.offset < -(1 - bufferEpwmParams.modulation_depth) / 2)
     {
-        newEpwmParams.offset = originalEpwmParams.offset;
+        bufferEpwmParams.offset = liveEpwmParams.offset;
         scia_msg(NEWLINE NEWLINE"Offset out of range");
         error = 1;
     }
@@ -447,7 +416,7 @@ int confirm_values(void)
 
     // Ask the user to confirm the values
     scia_msg(NEWLINE NEWLINE"PLEASE CONFIRM THE VALUES (Y/N):  ");
-    print_params(&newEpwmParams);
+    print_params(&bufferEpwmParams);
 
     // Wait for a valid response
     while (confirm == 0)
@@ -474,17 +443,17 @@ int confirm_values(void)
         }
 
     }
-    return (confirm == 1) ? 1 : 0; //if Y in input, return 1
+    return (confirm == 1) ? 1 : 0; //if Y in input, return 1 to handle receive char
 }
 
 // Prints the given PWM parameters to the serial terminal.
 void print_params(const EPwmParams *arr)
 {
     scia_msg(NEWLINE NEWLINE "PWM frequency = ");
-    float_to_string(arr->pwm_frequency);
+    float_to_string(arr->pwmWavFreq);
 
     scia_msg(NEWLINE "Sin wave frequency = ");
-    float_to_string(arr->sin_frequency);
+    float_to_string(arr->sinWavFreq);
 
     scia_msg(NEWLINE "Modulation depth = ");
     float_to_string(arr->modulation_depth);
@@ -493,13 +462,13 @@ void print_params(const EPwmParams *arr)
     float_to_string(arr->offset);
 
     scia_msg(NEWLINE "Angle 1 = ");
-    float_to_string(arr->angle_1);
+    float_to_string(arr->phaseLead1);
 
     scia_msg(NEWLINE "Angle 2 = ");
-    float_to_string(arr->angle_2);
+    float_to_string(arr->phaseLead2);
 
     scia_msg(NEWLINE "Angle 3 = ");
-    float_to_string(arr->angle_3);
+    float_to_string(arr->phaseLead3);
 }
 
 // Converts a float value to a string and sends it via SCI.
@@ -593,6 +562,47 @@ void print_welcome_screen(void)
 
 }
 
+void init_interrupts()
+{
+    DINT; //disable interrupts so no interrupts will interrupt the initialization of interrupts
+
+    /// Clear PIE (peripheral interrupt expansion) flags
+    InitPieCtrl();
+
+    IER = 0x0000; /// Clear all CPU interrupt flags
+    IFR = 0x0000; /// Clear all CPU interrupt flags
+
+    /// Initialize the PIE vector table with pointers to the ISR
+    InitPieVectTable();
+
+    EALLOW; /// Enables access to emulation and other protected registers
+    PieVectTable.EPWM1_INT = &epwm1_isr;
+    PieVectTable.EPWM2_INT = &epwm2_isr;
+    PieVectTable.EPWM3_INT = &epwm3_isr;
+    EDIS; /// Disable access to emulation space and other protected registers
+
+    /// Initialize the ePWM modules, uncomment if you want epwm to initialize on startup
+    /*
+    SysCtrlRegs.PCLKCR0.bit.TBCLKSYNC = 0; /// Disable TBCLK within the ePWM
+    EDIS;
+    Init_Epwmm();
+    SysCtrlRegs.PCLKCR0.bit.TBCLKSYNC = 1; /// Enable TBCLK within the ePWM
+    EDIS;
+    */
+
+    IER |= M_INT3; /// Enable CPU INT3 which is connected to EPWM1-3 INT
+
+    /// Enable EPWM INTn in the PIE: Group 3 interrupt 1-3
+    PieCtrlRegs.PIEIER3.bit.INTx1 = 1;
+    PieCtrlRegs.PIEIER3.bit.INTx2 = 1;
+    PieCtrlRegs.PIEIER3.bit.INTx3 = 1;
+
+    EINT;    /// Enable Global interrupt INTM
+    ERTM;    /// Enable Global real time interrupt DBGM
+}
+
+
+
 // SCI register initialization (Communication)
 void scia_echoback_init()
 {
@@ -622,6 +632,8 @@ void scia_fifo_init()
 // Initialize registers for ePWM 1, 2, and 3
 void Init_Epwmm()
 {
+    DINT; // Disable interrupts so no interrupts will interrupt the initialization of interrupts
+
     ///setup sync
     EPwm1Regs.TBCTL.bit.SYNCOSEL = TB_SYNC_IN;  /// Pass through
     EPwm2Regs.TBCTL.bit.SYNCOSEL = TB_SYNC_IN;  /// Pass through
@@ -632,64 +644,85 @@ void Init_Epwmm()
     EPwm2Regs.TBCTL.bit.PHSEN = TB_ENABLE;
     EPwm3Regs.TBCTL.bit.PHSEN = TB_ENABLE;
 
+    //The period register (TBPRD) is loaded from its shadow register
+    EPwm1Regs.TBCTL.bit.PRDLD  = TB_SHADOW;
+    EPwm2Regs.TBCTL.bit.PRDLD  = TB_SHADOW;
+    EPwm3Regs.TBCTL.bit.PRDLD  = TB_SHADOW;
+
     ///sets the phase angle for each wave
     EPwm1Regs.TBPHS.half.TBPHS =
-            (Uint16) (originalEpwmParams.angle_1 / (360) * (originalEpwmParams.epwmTimerTBPRD));
+            (Uint16) (liveEpwmParams.phaseLead1 / (360) * (liveEpwmParams.epwmTimerTBPRD));
     EPwm2Regs.TBPHS.half.TBPHS =
-            (Uint16) (originalEpwmParams.angle_1 / (360) * (originalEpwmParams.epwmTimerTBPRD));
+            (Uint16) (liveEpwmParams.phaseLead1 / (360) * (liveEpwmParams.epwmTimerTBPRD));
     EPwm3Regs.TBPHS.half.TBPHS =
-            (Uint16) (originalEpwmParams.angle_1 / (360) * (originalEpwmParams.epwmTimerTBPRD));
+            (Uint16) (liveEpwmParams.phaseLead1 / (360) * (liveEpwmParams.epwmTimerTBPRD));
 
-    EPwm1Regs.TBPRD = originalEpwmParams.epwmTimerTBPRD;         /// Set timer period
-    EPwm2Regs.TBPRD = originalEpwmParams.epwmTimerTBPRD;         /// Set timer period
-    EPwm3Regs.TBPRD = originalEpwmParams.epwmTimerTBPRD;         /// Set timer period
+    /// Set timer period
+    EPwm1Regs.TBPRD = liveEpwmParams.epwmTimerTBPRD;
+    EPwm2Regs.TBPRD = liveEpwmParams.epwmTimerTBPRD;
+    EPwm3Regs.TBPRD = liveEpwmParams.epwmTimerTBPRD;
 
-    EPwm1Regs.TBCTR = 0x0000;                   /// Clear counter
-    EPwm2Regs.TBCTR = 0x0000;                   /// Clear counter
-    EPwm3Regs.TBCTR = 0x0000;                   /// Clear counter
+    /// Clear counter
+    EPwm1Regs.TBCTR = 0x0000;
+    EPwm2Regs.TBCTR = 0x0000;
+    EPwm3Regs.TBCTR = 0x0000;
 
-    EPwm1Regs.CMPA.half.CMPA = 0;               /// starts compare A value
-    EPwm2Regs.CMPA.half.CMPA = 0;               /// starts compare A value
-    EPwm3Regs.CMPA.half.CMPA = 0;               /// starts compare A value
+    /// Sets compare A value to 0
+    EPwm1Regs.CMPA.half.CMPA = 0;
+    EPwm2Regs.CMPA.half.CMPA = 0;
+    EPwm3Regs.CMPA.half.CMPA = 0;
 
-    EPwm1Regs.TBCTL.bit.CTRMODE = 2;            /// Count up/down
-    EPwm2Regs.TBCTL.bit.CTRMODE = 2;            /// Count up/down
-    EPwm3Regs.TBCTL.bit.CTRMODE = 2;            /// Count up/down
+    /// Count up/down mode
+    EPwm1Regs.TBCTL.bit.CTRMODE = TB_COUNT_UPDOWN;
+    EPwm2Regs.TBCTL.bit.CTRMODE = TB_COUNT_UPDOWN;
+    EPwm3Regs.TBCTL.bit.CTRMODE = TB_COUNT_UPDOWN;
 
-    EPwm1Regs.ETSEL.bit.INTSEL = ET_CTR_ZERO;  /// Interrupt on when counter = 0
-    EPwm2Regs.ETSEL.bit.INTSEL = ET_CTR_ZERO;  /// Interrupt on when counter = 0
-    EPwm3Regs.ETSEL.bit.INTSEL = ET_CTR_ZERO;  /// Interrupt on when counter = 0
+    /// Interrupt on when counter = 0
+    EPwm1Regs.ETSEL.bit.INTSEL = ET_CTR_ZERO;
+    EPwm2Regs.ETSEL.bit.INTSEL = ET_CTR_ZERO;
+    EPwm3Regs.ETSEL.bit.INTSEL = ET_CTR_ZERO;
 
-    EPwm1Regs.ETSEL.bit.INTEN = 1;              /// Enable INT
-    EPwm2Regs.ETSEL.bit.INTEN = 1;              /// Enable INT
-    EPwm3Regs.ETSEL.bit.INTEN = 1;              /// Enable INT
+    /// Enable INT generation
+    EPwm1Regs.ETSEL.bit.INTEN = 1;
+    EPwm2Regs.ETSEL.bit.INTEN = 1;
+    EPwm3Regs.ETSEL.bit.INTEN = 1;
 
-    EPwm1Regs.ETPS.bit.INTPRD = 1;              /// Generate INT on 1st event
-    EPwm2Regs.ETPS.bit.INTPRD = 1;              /// Generate INT on 1st event
-    EPwm3Regs.ETPS.bit.INTPRD = 1;              /// Generate INT on 1st event
+    /// Generate INT on 1st event
+    EPwm1Regs.ETPS.bit.INTPRD = ET_1ST;
+    EPwm2Regs.ETPS.bit.INTPRD = ET_1ST;
+    EPwm3Regs.ETPS.bit.INTPRD = ET_1ST;
 
-    EPwm1Regs.TBCTL.bit.HSPCLKDIV = TB_DIV1;    /// Clock ratio to SYSCLKOUT
-    EPwm2Regs.TBCTL.bit.HSPCLKDIV = TB_DIV1;    /// Clock ratio to SYSCLKOUT
-    EPwm3Regs.TBCTL.bit.HSPCLKDIV = TB_DIV1;     /// Clock ratio to SYSCLKOUT
+    /// Clock ratio to SYSCLKOUT
+    EPwm1Regs.TBCTL.bit.HSPCLKDIV = TB_DIV1;
+    EPwm2Regs.TBCTL.bit.HSPCLKDIV = TB_DIV1;
+    EPwm3Regs.TBCTL.bit.HSPCLKDIV = TB_DIV1;
 
-    EPwm1Regs.TBCTL.bit.CLKDIV = TB_DIV1;           /// Clock ratio to SYSCLKOUT
-    EPwm2Regs.TBCTL.bit.CLKDIV = TB_DIV1;           /// Clock ratio to SYSCLKOUT
-    EPwm3Regs.TBCTL.bit.CLKDIV = TB_DIV1;           /// Clock ratio to SYSCLKOUT
+    /// Clock ratio to SYSCLKOUT
+    EPwm1Regs.TBCTL.bit.CLKDIV = TB_DIV1;
+    EPwm2Regs.TBCTL.bit.CLKDIV = TB_DIV1;
+    EPwm3Regs.TBCTL.bit.CLKDIV = TB_DIV1;
 
-    EPwm1Regs.CMPCTL.bit.SHDWAMODE = CC_SHADOW;// Enable shadow mode for Compare A registers of ePWM1
-    EPwm2Regs.CMPCTL.bit.SHDWAMODE = CC_SHADOW;// Enable shadow mode for Compare A registers of ePWM2
-    EPwm3Regs.CMPCTL.bit.SHDWAMODE = CC_SHADOW;// Enable shadow mode for Compare A registers of ePWM3
+    // Enable shadow mode for Compare A registers of ePWMx
+    EPwm1Regs.CMPCTL.bit.SHDWAMODE = CC_SHADOW;
+    EPwm2Regs.CMPCTL.bit.SHDWAMODE = CC_SHADOW;
+    EPwm3Regs.CMPCTL.bit.SHDWAMODE = CC_SHADOW;
 
-    EPwm1Regs.CMPCTL.bit.LOADAMODE = CC_CTR_ZERO;  /// Load on Zero
-    EPwm2Regs.CMPCTL.bit.LOADAMODE = CC_CTR_ZERO;  /// Load on Zero
-    EPwm3Regs.CMPCTL.bit.LOADAMODE = CC_CTR_ZERO;  /// Load on Zero
 
-    EPwm1Regs.AQCTLA.bit.CAU = 2;    /// Set PWM1A on event A, up count
-    EPwm2Regs.AQCTLA.bit.CAU = 2;    /// Set PWM1A on event A, up count
-    EPwm3Regs.AQCTLA.bit.CAU = 2;    /// Set PWM1A on event A, up count
+    /// Load on Zero
+    EPwm1Regs.CMPCTL.bit.LOADAMODE = CC_CTR_ZERO;
+    EPwm2Regs.CMPCTL.bit.LOADAMODE = CC_CTR_ZERO;
+    EPwm3Regs.CMPCTL.bit.LOADAMODE = CC_CTR_ZERO;
 
-    EPwm1Regs.AQCTLA.bit.CAD = 1;   /// Clear PWM1A on event A, down count
-    EPwm2Regs.AQCTLA.bit.CAD = 1;   /// Clear PWM1A on event A, down count
-    EPwm3Regs.AQCTLA.bit.CAD = 1;   /// Clear PWM1A on event A, down count
+    /// Set PWMxA on event A, up count
+    EPwm1Regs.AQCTLA.bit.CAU = AQ_SET;
+    EPwm2Regs.AQCTLA.bit.CAU = AQ_SET;
+    EPwm3Regs.AQCTLA.bit.CAU = AQ_SET;
+
+    /// Clear PWM1A on event A, down count
+    EPwm1Regs.AQCTLA.bit.CAD = AQ_CLEAR;
+    EPwm2Regs.AQCTLA.bit.CAD = AQ_CLEAR;
+    EPwm3Regs.AQCTLA.bit.CAD = AQ_CLEAR;
+
+    EINT;  //   Enable interrupts
 
 }
