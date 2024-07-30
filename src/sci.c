@@ -46,7 +46,7 @@ void handle_received_char(Uint16 ReceivedChar)
     }
     else
     {
-        // Add character to buffer array if there's space
+        // Populates buffer array if there's space
         if (bufferIndex < MAX_BUFFER_SIZE - 1)
         {
             buffer[bufferIndex++] = ReceivedChar;
@@ -87,15 +87,15 @@ int process_buffer(const char *buffer)
         case 'p':
             error = populate_variable(&(buffer[i]),
                                       &bufferEpwmParams.pwmWavFreq,
-                                      pwmWavFreq_MIN,
-                                      pwmWavFreq_MAX, &i);
+                                      PWMWAVFREQ_MIN,
+                                      PWMWAVFREQ_MAX, &i);
             break;
         case 'S':
         case 's':
             error = populate_variable(&(buffer[i]),
                                       &bufferEpwmParams.sinWavFreq,
-                                      sinWavFreq_MIN,
-                                      sinWavFreq_MAX, &i);
+                                      SINWAVFREQ_MIN,
+                                      SINWAVFREQ_MAX, &i);
             break;
         case 'M':
         case 'm':
