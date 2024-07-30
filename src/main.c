@@ -1,11 +1,22 @@
-/* HTerm 0.8.9
+/*
+ * Project: F28069M_ThreePhase (with UART)
+ *
+ *
+ * Author: Ethan Robotham
+ *
+ *
+ *  NOTE TO PROGRAMMERS!!!!!!!
+ *(Make sure to use these settings on your serial terminal, if your newline is something else, change the define "NEWLINE" in sci.h (default is \r\n)
+ *
+ * HTerm 0.8.9
  * Baud rate = 9600
  * Data = 8
  * Stop bit = 1
  * Parity = none
- * Newline at CR+LF
+ * Newline = CR+LF
  * Make sure terminating character is sent with data (marks end)
  */
+
 
 #include "main.h"
 
@@ -15,13 +26,14 @@
  * and handles user interaction through SCI for parameter configuration.
  * All main logic for PWM occurs at interrupt
  */
+
 void main(void)
 {
     // Calculate the ePWM timer period, .5 is used because timer is in up/down count mode
     liveEpwmParams.epwmTimerTBPRD =
             (Uint32)(0.5 * (PWMCLK / liveEpwmParams.pwmWavFreq));
 
-    // Copy default PWM parameters to new PWM parameters
+    // Initializes struct that accepts user inputs by copying live pwm struct
     memcpy(&bufferEpwmParams, &liveEpwmParams, sizeof(EPwmParams));
 
     /// System initialization
@@ -45,7 +57,7 @@ void main(void)
         while (SciaRegs.SCIFFRX.bit.RXFFST < 1)
         {
         }
-        ReceivedChar = SciaRegs.SCIRXBUF.all;  // Read received character
+        ReceivedChar = SciaRegs.SCIRXBUF.all;  // Read received character from buffer
         handle_received_char(ReceivedChar);
     }
 

@@ -1,4 +1,4 @@
-// Included Files
+/// Included Files
 #include "DSP28x_Project.h"     // Device Headerfile and Examples Include File
 #include <math.h>
 #include "pwm.h"

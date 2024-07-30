@@ -1,11 +1,13 @@
 #include "DSP28x_Project.h"     // Device Headerfile and Examples Include File
 #include "sci.h"
 
-// Data from serial communications writes to structure  once processed and confirmed
+// Data from serial communications writes to live structure once processed and confirmed
 
 /**
  * Handles a received character from SCI, builds a command buffer, and processes it.
  * Echoes back user input and manages parameter confirmation and update.
+ *
+ *
  */
 void handle_received_char(Uint16 ReceivedChar)
 {
@@ -13,7 +15,7 @@ void handle_received_char(Uint16 ReceivedChar)
     static char buffer[MAX_BUFFER_SIZE];
     static Uint16 bufferIndex = 0;
 
-    // Check for terminating character
+    // Check to see if final charcater was processed (always end with terminating character)
     if (ReceivedChar == '\0')
     {
         //echo back user input
@@ -21,7 +23,7 @@ void handle_received_char(Uint16 ReceivedChar)
         scia_msg(NEWLINE NEWLINE "You sent: ");
         scia_msg(buffer);
 
-        // Check for errors and confirmation of values
+        // Check for errors and user confirmation of values
         if (process_buffer(buffer) && confirm_values())
         {
             scia_msg(NEWLINE NEWLINE"Values confirmed and set.");
@@ -225,7 +227,8 @@ int populate_variable(const char *arr, float *var, const float min, const float 
  */
 int confirm_values(void)
 {
-    Uint16 confirm = 0;
+
+    Uint16 confirm = 2;
     Uint16 RecivedChar = 0;
 
     // Ask the user to confirm the values
@@ -233,7 +236,7 @@ int confirm_values(void)
     print_params(&bufferEpwmParams);
 
     // Wait for a valid response
-    while (confirm == 0)
+    while (confirm == 2)
     {
         while (SciaRegs.SCIFFRX.bit.RXFFST < 1)
         {
@@ -248,7 +251,7 @@ int confirm_values(void)
         }
         else if (RecivedChar == 'N' || RecivedChar == 'n')
         {
-            confirm = 2; //number that is not one
+            confirm = 0;
         }
         else
         {
@@ -257,7 +260,7 @@ int confirm_values(void)
         }
 
     }
-    return (confirm == 1) ? 1 : 0; //if Y in input, return 1 to handle receive char
+    return confirm; //if Y in input, return 1 to handle receive char, N returns 0 as false
 }
 
 // Prints the given PWM parameters to the serial terminal.

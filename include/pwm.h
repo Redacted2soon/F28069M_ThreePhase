@@ -7,7 +7,7 @@
 #include <math.h>
 #ifndef PWM_H
 #define PWM_H
-
+///TODO: make define into config file with constant global variables for easier debugging
 ///Define Valid Ranges for parameters
 #define pwmWavFreq_MIN 687
 #define pwmWavFreq_MAX 100000
@@ -21,7 +21,7 @@
 #define MAX_BUFFER_SIZE 100
 #define MAX_MSG_SIZE 100
 
-// Declaration of struct to hold PWM parameters
+/// Declaration of struct to hold PWM parameters
 typedef struct
 {
     float pwmWavFreq;
@@ -34,15 +34,15 @@ typedef struct
     Uint32 epwmTimerTBPRD;
 } EPwmParams;
 
-// Function prototypes
+/// Function prototypes
 
-void Init_Epwmm(void);             // Initialize registers for ePWM 1, 2, and 3
+void Init_Epwmm(void);             /// Initialize registers for ePWM 1, 2, and 3
 void init_epwm_interrupts(void);
 
 /// Interrupt service routines (ISRs)
-__interrupt void epwm1_isr(void);               // ISR for ePWM1: Generates a sinusoidal PWM signal with the specified parameters.
-__interrupt void epwm2_isr(void);               // ISR for ePWM2: Generates a sinusoidal PWM signal with the specified parameters.
-__interrupt void epwm3_isr(void);               // ISR for ePWM3: Generates a sinusoidal PWM signal with the specified parameters.
+__interrupt void epwm1_isr(void);               /// ISR for ePWM1: Generates a sinusoidal PWM signal with the specified parameters.
+__interrupt void epwm2_isr(void);               /// ISR for ePWM2: Generates a sinusoidal PWM signal with the specified parameters.
+__interrupt void epwm3_isr(void);               /// ISR for ePWM3: Generates a sinusoidal PWM signal with the specified parameters.
 
 
 
