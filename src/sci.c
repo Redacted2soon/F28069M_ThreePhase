@@ -26,7 +26,7 @@ void handle_received_char(Uint16 ReceivedChar)
         {
             scia_msg(NEWLINE NEWLINE"Values confirmed and set.");
             memcpy(&liveEpwmParams, &bufferEpwmParams, sizeof(EPwmParams)); // Copy new values to original
-            liveEpwmParams.epwmTimerTBPRD = (Uint32)(0.5 * (SYSCLK / liveEpwmParams.pwmWavFreq));
+            liveEpwmParams.epwmTimerTBPRD = (Uint32)(0.5 * (PWMCLK / liveEpwmParams.pwmWavFreq));
             Init_Epwmm();
         }
         else

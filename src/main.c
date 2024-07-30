@@ -19,7 +19,7 @@ void main(void)
 {
     // Calculate the ePWM timer period, .5 is used because timer is in up/down count mode
     liveEpwmParams.epwmTimerTBPRD =
-            (Uint32)(0.5 * (SYSCLK / liveEpwmParams.pwmWavFreq));
+            (Uint32)(0.5 * (PWMCLK / liveEpwmParams.pwmWavFreq));
 
     // Copy default PWM parameters to new PWM parameters
     memcpy(&bufferEpwmParams, &liveEpwmParams, sizeof(EPwmParams));

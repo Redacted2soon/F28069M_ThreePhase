@@ -10,12 +10,12 @@
 
 ///Define Valid Ranges for parameters
 #define pwmWavFreq_MIN 687
-#define pwmWavFreq_MAX 10000
+#define pwmWavFreq_MAX 100000
 #define sinWavFreq_MIN 0
 #define sinWavFreq_MAX 300
 #define MODULATION_DEPTH_MIN 0.0
 #define MODULATION_DEPTH_MAX 1.0
-#define SYSCLK 90.0*1000000.0
+#define PWMCLK 90.0*1000000.0
 #define MIN_ANGLE -360
 #define MAX_ANGLE 360
 #define MAX_BUFFER_SIZE 100
