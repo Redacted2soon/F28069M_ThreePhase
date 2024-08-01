@@ -3,6 +3,7 @@
 ## About
 
 This repository contains embedded software for a function generator implemented on the TMS320F28069M microcontroller. The function generator is capable of generating three-phase wave with configurable parameters such as: PWM frequency, sin frequency, modulation depth, offset, and phase (of each wave).
+![image](https://github.com/user-attachments/assets/8706b4a3-3700-4cee-b6b9-43aea860b3e6)
 
 ### Built With
 
