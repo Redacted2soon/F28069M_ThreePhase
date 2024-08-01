@@ -46,6 +46,7 @@ Connect the pins like this (each output having its own low pass filter):
 
 Here are the components used in each filter: 
 ![image](https://github.com/user-attachments/assets/fc0d6c6c-d055-4cc7-9661-5fd793b61c73)
+
 (you can switch the 100k to a bigger resistor, the bigger the better) 
 
 ### Running the Project for Development
