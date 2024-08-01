@@ -41,10 +41,10 @@ To run the project for development:
 3. Import the project
 ### Setting up the wireing
 The first wave comes out of P0, Second P2, third P4
-Connect the pins like this (each output having its own low pass filter):
+Connect the pins like this (each output having its own low pass filter): 
 ![image](https://github.com/user-attachments/assets/57ce7bc7-7716-41ac-a33b-a9d45dc43dde)
 
-Here are the components used in each filter:
+Here are the components used in each filter: 
 ![image](https://github.com/user-attachments/assets/fc0d6c6c-d055-4cc7-9661-5fd793b61c73)
 (you can switch the 100k to a bigger resistor, the bigger the better) 
 
