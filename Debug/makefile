@@ -36,6 +36,8 @@ ORDERED_OBJS += \
 "./common/source/F2806x_usDelay.obj" \
 "./headers/source/F2806x_GlobalVariableDefs.obj" \
 "./src/main.obj" \
+"./src/pwm.obj" \
+"./src/sci.obj" \
 "../f28069M_ram_lnk.cmd" \
 "C:/ti/c2000/C2000Ware_5_02_00_00/device_support/f2806x/headers/cmd/F2806x_Headers_nonBIOS.cmd" \
 $(GEN_CMDS__FLAG) \
@@ -175,8 +177,8 @@ F28069M_ThreePhase.out: $(OBJS) $(CMD_SRCS) $(GEN_CMDS)
 # Other Targets
 clean:
 	-$(RM) $(EXE_OUTPUTS__QUOTED)
-	-$(RM) "common\source\F2806x_Adc.obj" "common\source\F2806x_CodeStartBranch.obj" "common\source\F2806x_Comp.obj" "common\source\F2806x_CpuTimers.obj" "common\source\F2806x_DBGIER.obj" "common\source\F2806x_DefaultIsr.obj" "common\source\F2806x_DisInt.obj" "common\source\F2806x_Dma.obj" "common\source\F2806x_ECan.obj" "common\source\F2806x_ECap.obj" "common\source\F2806x_EPwm.obj" "common\source\F2806x_EQep.obj" "common\source\F2806x_Gpio.obj" "common\source\F2806x_HRCap.obj" "common\source\F2806x_I2C.obj" "common\source\F2806x_Mcbsp.obj" "common\source\F2806x_OscComp.obj" "common\source\F2806x_PieCtrl.obj" "common\source\F2806x_PieVect.obj" "common\source\F2806x_Sci.obj" "common\source\F2806x_Spi.obj" "common\source\F2806x_SysCtrl.obj" "common\source\F2806x_TempSensorConv.obj" "common\source\F2806x_usDelay.obj" "headers\source\F2806x_GlobalVariableDefs.obj" "src\main.obj" 
-	-$(RM) "common\source\F2806x_Adc.d" "common\source\F2806x_Comp.d" "common\source\F2806x_CpuTimers.d" "common\source\F2806x_DefaultIsr.d" "common\source\F2806x_Dma.d" "common\source\F2806x_ECan.d" "common\source\F2806x_ECap.d" "common\source\F2806x_EPwm.d" "common\source\F2806x_EQep.d" "common\source\F2806x_Gpio.d" "common\source\F2806x_HRCap.d" "common\source\F2806x_I2C.d" "common\source\F2806x_Mcbsp.d" "common\source\F2806x_OscComp.d" "common\source\F2806x_PieCtrl.d" "common\source\F2806x_PieVect.d" "common\source\F2806x_Sci.d" "common\source\F2806x_Spi.d" "common\source\F2806x_SysCtrl.d" "common\source\F2806x_TempSensorConv.d" "headers\source\F2806x_GlobalVariableDefs.d" "src\main.d" 
+	-$(RM) "common\source\F2806x_Adc.obj" "common\source\F2806x_CodeStartBranch.obj" "common\source\F2806x_Comp.obj" "common\source\F2806x_CpuTimers.obj" "common\source\F2806x_DBGIER.obj" "common\source\F2806x_DefaultIsr.obj" "common\source\F2806x_DisInt.obj" "common\source\F2806x_Dma.obj" "common\source\F2806x_ECan.obj" "common\source\F2806x_ECap.obj" "common\source\F2806x_EPwm.obj" "common\source\F2806x_EQep.obj" "common\source\F2806x_Gpio.obj" "common\source\F2806x_HRCap.obj" "common\source\F2806x_I2C.obj" "common\source\F2806x_Mcbsp.obj" "common\source\F2806x_OscComp.obj" "common\source\F2806x_PieCtrl.obj" "common\source\F2806x_PieVect.obj" "common\source\F2806x_Sci.obj" "common\source\F2806x_Spi.obj" "common\source\F2806x_SysCtrl.obj" "common\source\F2806x_TempSensorConv.obj" "common\source\F2806x_usDelay.obj" "headers\source\F2806x_GlobalVariableDefs.obj" "src\main.obj" "src\pwm.obj" "src\sci.obj" 
+	-$(RM) "common\source\F2806x_Adc.d" "common\source\F2806x_Comp.d" "common\source\F2806x_CpuTimers.d" "common\source\F2806x_DefaultIsr.d" "common\source\F2806x_Dma.d" "common\source\F2806x_ECan.d" "common\source\F2806x_ECap.d" "common\source\F2806x_EPwm.d" "common\source\F2806x_EQep.d" "common\source\F2806x_Gpio.d" "common\source\F2806x_HRCap.d" "common\source\F2806x_I2C.d" "common\source\F2806x_Mcbsp.d" "common\source\F2806x_OscComp.d" "common\source\F2806x_PieCtrl.d" "common\source\F2806x_PieVect.d" "common\source\F2806x_Sci.d" "common\source\F2806x_Spi.d" "common\source\F2806x_SysCtrl.d" "common\source\F2806x_TempSensorConv.d" "headers\source\F2806x_GlobalVariableDefs.d" "src\main.d" "src\pwm.d" "src\sci.d" 
 	-$(RM) "common\source\F2806x_CodeStartBranch.d" "common\source\F2806x_DBGIER.d" "common\source\F2806x_DisInt.d" "common\source\F2806x_usDelay.d" 
 	-@echo 'Finished clean'
 	-@echo ' '
