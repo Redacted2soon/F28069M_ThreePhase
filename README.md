@@ -77,17 +77,17 @@ The PWM (Pulse Width Modulation) creates the waveform by generating a sinusoidal
   A higher PWM frequency means the ISR is triggered more frequently (smaller amout of clocks), allowing for more updates to the PWM duty cycle, which can improve accuracy and resolution of the output signal.
   Adjusting the sin frequency changes the rate at which the angle increments in the ISR. A higher sin frequency results in faster angle increments, which increases the frequency of the generated sinusoidal waveform.
 
- The smallest value for the PWM frequency is 687 because the pwm counter is only 16 bits, 2^(16) > 90 * 10^6 / (PWM_FREQUENCY * 2).
+ The smallest value for the PWM frequency is 687 because the pwm counter is only 16 bits, 2^(16) > 90 * 10^6 / (pwmWavFreq * 2).
    
 3. Sinusoidal Signal Generation
   Angle Calculation: An angle is incremented in each ISR call to simulate the sinusoidal waveform.
   Angle Increment: This value determines how fast the angle progresses based on the sinusoidal frequency.
-    float angleincrement = 2 * M_PI * (originalePwmParams.sin_frequency / originalePwmParams.pwm_frequency);
+    float angleincrement = 2 * M_PI * (liveEpwmParams.sinWavFreq / liveEpwmParams.pwmWavFreq);
   Wrap-around Logic: If the angle exceeds 2 * M_PI, it wraps around to keep it within the range of 0 to 2 * M_PI.
 
 4. Duty Cycle Calculation
-   Sine Calculation: The sine of the current angle, adjusted by a phase shift (angle_1, angle_2, angle_3), is used to create a sinusoidal modulation.
-    float duty_cycle = (sinf(angle + originalePwmParams.angle_1 * M_PI / 180.0) * originalePwmParams.modulation_depth + 1) * 0.5 - originalePwmParams.offset;
+   Sine Calculation: The sine of the current angle, adjusted by a phase shift (phaseLead1, phaseLead2, phaseLead3), is used to create a sinusoidal modulation.
+    float duty_cycle = (sinf(angle + liveEpwmParams.phaseLead1 * M_PI / 180.0) * liveEpwmParams.modulation_depth + 1) * 0.5 - liveEpwmParams.offset;
    
 6. Compare
    The one minus the duty cycle (calculated as a percentage) is then multiplied by the period and stored in the compare register (one minus just makes the math a little better to follow)
