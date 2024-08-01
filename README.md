@@ -40,9 +40,11 @@ To run the project for development:
 1. Clone the repo
 2. Open Code Composer Studio at the directory the repository is located in such as `C:\MyProjects\FunctionGenerator\`
 3. Import the project
-4. Link "common" folder and link "headers" folder (links shown in picture below)
-5. Exclude three files from build (files shown in picture below)
-   ![image](https://github.com/user-attachments/assets/d341707f-03d1-488c-83df-72f6f3123ce0)
+4. Link "common" folder and link "headers" folder (C:\ti\c2000\C2000Ware_5_02_00_00\device_support\f2806x\common and C:\ti\c2000\C2000Ware_5_02_00_00\device_support\f2806x\headers)
+5. Exclude three files from build from common/source (files shown in picture below)
+\F2806x_CSMPasswords.asm, \F2806x_SWPrioritizedDefaultIsr.c, and \F2806x_SWPrioritizedPieVect.c)  <br>
+   ![image](https://github.com/user-attachments/assets/623d77ec-609c-46a0-87ab-0b9508733a26)
+
 
 ### Setting up the wireing
 The first wave comes out of P0, Second P2, third P4
