@@ -30,7 +30,7 @@ The project is structured as a Code Composer Studio project.
 2. Newline at CR+LF
 3. Send on enter: NULL
 4. Set transmit and recieve on "Ascii"
-5. Click the "connect" button (In HTerm, disconnect should be shown once connect is pressed)
+5. Click the "connect" button (In HTerm, disconnect should be shown once connect is pressed)  <br>
 ![image](https://github.com/user-attachments/assets/689ff867-cf3d-43e5-a622-711a59307de0)
 
 ### Opening the Project
@@ -40,6 +40,10 @@ To run the project for development:
 1. Clone the repo
 2. Open Code Composer Studio at the directory the repository is located in such as `C:\MyProjects\FunctionGenerator\`
 3. Import the project
+4. Link "common" folder and link "headers" folder (links shown in picture below)
+5. Exclude three files from build (files shown in picture below)
+   ![image](https://github.com/user-attachments/assets/d341707f-03d1-488c-83df-72f6f3123ce0)
+
 ### Setting up the wireing
 The first wave comes out of P0, Second P2, third P4
 Connect the pins like this (each output having its own low pass filter): <br>
@@ -59,7 +63,7 @@ To run the project for development:
 3. Attach a XDS510USB debugger to the development board.
 4. Click Debug (bug icon).
 5. After the target has been flashed, click the start button (play icon).
-6. This screen should show up in the serial terminal, follow directions to change wave.
+6. This screen should show up in the serial terminal, follow directions to change wave.  <br>
 ![image](https://github.com/user-attachments/assets/20328408-a91d-4a27-ae49-3265f13b7e54)
 
 
