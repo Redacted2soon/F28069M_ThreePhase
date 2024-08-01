@@ -12,7 +12,7 @@
 #ifndef SCI_H
 #define SCI_H
 
-#define NEWLINE "\r\n" // Change depending on serial terminal new line character
+#define NEWLINE "\r\n"
 
 extern EPwmParams liveEpwmParams;
 extern EPwmParams bufferEpwmParams;

@@ -3,11 +3,9 @@
 
 // Data from serial communications writes to live structure once processed and confirmed
 
-/**
+/*
  * Handles a received character from SCI, builds a command buffer, and processes it.
  * Echoes back user input and manages parameter confirmation and update.
- *
- *
  */
 void handle_received_char(Uint16 ReceivedChar)
 {
@@ -28,7 +26,7 @@ void handle_received_char(Uint16 ReceivedChar)
         {
             scia_msg(NEWLINE NEWLINE"Values confirmed and set.");
             memcpy(&liveEpwmParams, &bufferEpwmParams, sizeof(EPwmParams)); // Copy new values to original
-            liveEpwmParams.epwmTimerTBPRD = (Uint32)(0.5 * (PWMCLK / liveEpwmParams.pwmWavFreq));
+            liveEpwmParams.epwmTimerTBPRD = (Uint32)(0.5 * (PWMCLKFREQ / liveEpwmParams.pwmWavFreq));
             Init_Epwmm();
         }
         else
@@ -156,7 +154,7 @@ int process_buffer(const char *buffer)
     return error ? 0 : 1;    //Returns 0 if there was an error
 }
 
-/**
+/*
  * Parses a portion of the input buffer to populate a float variable.
  * Checks if the value is within specified range.
  * Returns 0 if successful, 1 if error occurred (out of range or invalid input).
@@ -221,7 +219,7 @@ int populate_variable(const char *arr, float *var, const float min, const float 
     return 0;
 }
 
-/**
+/*
  * Prompts the user to confirm the new PWM values and returns the confirmation status.
  * Returns 1 if confirmed, 0 if not confirmed.
  */
@@ -335,7 +333,7 @@ void clear_scia_rx_buffer()
     }
 }
 
-// Transmits a single ASCII character via the SCI.
+// Transmits a single ASCII character via the SCI from terminal to micro.
 void scia_xmit(int asciiValue)
 {
     while (SciaRegs.SCIFFTX.bit.TXFFST != 0)
@@ -345,7 +343,7 @@ void scia_xmit(int asciiValue)
     SciaRegs.SCITXBUF = asciiValue; // Placed below to ensure that the transmit buffer is empty before attempting to send data
 }
 
-// Transmits a message (string) via the SCI.
+// Sends string char by char to transmit function
 void scia_msg(const char *msg)
 {
 
@@ -389,7 +387,7 @@ void scia_echoback_init()
     SciaRegs.SCICTL2.bit.TXINTENA = 0;
     SciaRegs.SCICTL2.bit.RXBKINTENA = 0;
 
-    // 9600 baud @LSPCLK = 22.5MHz (90 MHz SYSCLK)
+    // 9600 baud @LSPCLK = 22.5MHz (90 MHz SYSCLK), use formula register = (LSPCLK / targetBaud*8) - 1
     SciaRegs.SCIHBAUD = 0x0001;
     SciaRegs.SCILBAUD = 0x0024;
 

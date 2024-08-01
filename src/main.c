@@ -1,9 +1,9 @@
 /*
  * Project: F28069M_ThreePhase (with UART)
  *
- *
  * Author: Ethan Robotham
  *
+ * Date: 7/30/2024
  *
  *  NOTE TO PROGRAMMERS!!!!!!!
  *(Make sure to use these settings on your serial terminal, if your newline is something else, change the define "NEWLINE" in sci.h (default is \r\n)
@@ -31,7 +31,7 @@ void main(void)
 {
     // Calculate the ePWM timer period, .5 is used because timer is in up/down count mode
     liveEpwmParams.epwmTimerTBPRD =
-            (Uint32)(0.5 * (PWMCLK / liveEpwmParams.pwmWavFreq));
+            (Uint32)(0.5 * (PWMCLKFREQ / liveEpwmParams.pwmWavFreq));
 
     // Initializes struct that accepts user inputs by copying live pwm struct
     memcpy(&bufferEpwmParams, &liveEpwmParams, sizeof(EPwmParams));

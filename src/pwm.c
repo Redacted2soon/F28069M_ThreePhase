@@ -23,7 +23,7 @@ EPwmParams bufferEpwmParams;
  */
 __interrupt void epwm1_isr(void)
 {
-    ///initialize angle and convert from degrees to radians
+    //initialize angle and convert from degrees to radians
     static float angle = 0;
 
     // Calculate the angle increment per PWM cycle
@@ -40,7 +40,7 @@ __interrupt void epwm1_isr(void)
             - liveEpwmParams.offset;
 
     // Set the compare value for the PWM signal
-    EPwm1Regs.CMPA.half.CMPA = (Uint32) ((duty_cycle)
+    EPwm1Regs.CMPA.half.CMPA = (Uint32) ((1-duty_cycle)
             * ((float) liveEpwmParams.epwmTimerTBPRD));
 
     // Increment the angle for the next cycle
@@ -66,7 +66,7 @@ __interrupt void epwm2_isr(void)
     float angle_rad = angle + liveEpwmParams.phaseLead2 * M_PI / 180.0;
     float duty_cycle = (sinf(angle_rad) * liveEpwmParams.modulation_depth + 1) * .5 - liveEpwmParams.offset;
 
-    EPwm2Regs.CMPA.half.CMPA = (Uint32) ((duty_cycle) * ((float) liveEpwmParams.epwmTimerTBPRD));
+    EPwm2Regs.CMPA.half.CMPA = (Uint32) ((1-duty_cycle) * ((float) liveEpwmParams.epwmTimerTBPRD));
 
     angle += angleincrement;
 
@@ -86,7 +86,7 @@ __interrupt void epwm3_isr(void)
     float angle_rad = angle + liveEpwmParams.phaseLead3 * M_PI / 180.0;
     float duty_cycle = (sinf(angle_rad) * liveEpwmParams.modulation_depth + 1) * .5 - liveEpwmParams.offset;
 
-    EPwm3Regs.CMPA.half.CMPA = (Uint32) ((duty_cycle) * ((float) liveEpwmParams.epwmTimerTBPRD));
+    EPwm3Regs.CMPA.half.CMPA = (Uint32) ((1-duty_cycle) * ((float) liveEpwmParams.epwmTimerTBPRD));
 
     angle += angleincrement;
 
@@ -100,39 +100,39 @@ void init_epwm_interrupts()
 {
     DINT; //disable interrupts so no interrupts will interrupt the initialization of interrupts
 
-    /// Clear PIE (peripheral interrupt expansion) flags
+    // Clear PIE (peripheral interrupt expansion) flags
     InitPieCtrl();
 
-    IER = 0x0000; /// Clear all CPU interrupt flags
-    IFR = 0x0000; /// Clear all CPU interrupt flags
+    IER = 0x0000; // Clear all CPU interrupt flags
+    IFR = 0x0000; // Clear all CPU interrupt flags
 
-    /// Initialize the PIE vector table with pointers to the ISR
+    // Initialize the PIE vector table with pointers to the ISR
     InitPieVectTable();
 
-    EALLOW; /// Enables access to emulation and other protected registers
+    EALLOW; // Enables access to emulation and other protected registers
     PieVectTable.EPWM1_INT = &epwm1_isr;
     PieVectTable.EPWM2_INT = &epwm2_isr;
     PieVectTable.EPWM3_INT = &epwm3_isr;
-    EDIS; /// Disable access to emulation space and other protected registers
+    EDIS; // Disable access to emulation space and other protected registers
 
-    /// Initialize the ePWM modules, uncomment if you want epwm to initialize on startup
+    // Initialize the ePWM modules, uncomment if you want epwm to initialize on startup
     /*
-    SysCtrlRegs.PCLKCR0.bit.TBCLKSYNC = 0; /// Disable TBCLK within the ePWM
+    SysCtrlRegs.PCLKCR0.bit.TBCLKSYNC = 0; // Disable TBCLK within the ePWM
     EDIS;
     Init_Epwmm();
-    SysCtrlRegs.PCLKCR0.bit.TBCLKSYNC = 1; /// Enable TBCLK within the ePWM
+    SysCtrlRegs.PCLKCR0.bit.TBCLKSYNC = 1; // Enable TBCLK within the ePWM
     EDIS;
     */
 
-    IER |= M_INT3; /// Enable CPU INT3 which is connected to EPWM1-3 INT
+    IER |= M_INT3; // Enable CPU INT3 which is connected to EPWM1-3 INT
 
-    /// Enable EPWM INTn in the PIE: Group 3 interrupt 1-3
+    // Enable EPWM INTn in the PIE: Group 3 interrupt 1-3
     PieCtrlRegs.PIEIER3.bit.INTx1 = 1;
     PieCtrlRegs.PIEIER3.bit.INTx2 = 1;
     PieCtrlRegs.PIEIER3.bit.INTx3 = 1;
 
-    EINT;    /// Enable Global interrupt INTM
-    ERTM;    /// Enable Global real time interrupt DBGM
+    EINT;    // Enable Global interrupt INTM
+    ERTM;    // Enable Global real time interrupt DBGM
 }
 
 // Initialize registers for ePWM 1, 2, and 3
@@ -140,12 +140,12 @@ void Init_Epwmm()
 {
     DINT; // Disable interrupts so no interrupts will interrupt the initialization of interrupts
 
-    ///setup sync
-    EPwm1Regs.TBCTL.bit.SYNCOSEL = TB_SYNC_IN;  /// Pass through
-    EPwm2Regs.TBCTL.bit.SYNCOSEL = TB_SYNC_IN;  /// Pass through
-    EPwm3Regs.TBCTL.bit.SYNCOSEL = TB_SYNC_IN;  /// Pass through
+    //setup sync from EPWMxSYNC signal generated from PHSEN
+    EPwm1Regs.TBCTL.bit.SYNCOSEL = TB_SYNC_IN;  // Pass through
+    EPwm2Regs.TBCTL.bit.SYNCOSEL = TB_SYNC_IN;  // Pass through
+    EPwm3Regs.TBCTL.bit.SYNCOSEL = TB_SYNC_IN;  // Pass through
 
-    ///allow sync
+    //allow sync
     EPwm1Regs.TBCTL.bit.PHSEN = TB_ENABLE;
     EPwm2Regs.TBCTL.bit.PHSEN = TB_ENABLE;
     EPwm3Regs.TBCTL.bit.PHSEN = TB_ENABLE;
@@ -155,7 +155,27 @@ void Init_Epwmm()
     EPwm2Regs.TBCTL.bit.PRDLD  = TB_SHADOW;
     EPwm3Regs.TBCTL.bit.PRDLD  = TB_SHADOW;
 
-    ///sets the phase angle for each wave
+    // Count up/down mode
+    EPwm1Regs.TBCTL.bit.CTRMODE = TB_COUNT_UPDOWN;
+    EPwm2Regs.TBCTL.bit.CTRMODE = TB_COUNT_UPDOWN;
+    EPwm3Regs.TBCTL.bit.CTRMODE = TB_COUNT_UPDOWN;
+
+    // Clock ratio to SYSCLKOUT
+    EPwm1Regs.TBCTL.bit.HSPCLKDIV = TB_DIV1;
+    EPwm2Regs.TBCTL.bit.HSPCLKDIV = TB_DIV1;
+    EPwm3Regs.TBCTL.bit.HSPCLKDIV = TB_DIV1;
+
+    // Clock ratio to SYSCLKOUT
+    EPwm1Regs.TBCTL.bit.CLKDIV = TB_DIV1;
+    EPwm2Regs.TBCTL.bit.CLKDIV = TB_DIV1;
+    EPwm3Regs.TBCTL.bit.CLKDIV = TB_DIV1;
+
+    // Clear counter
+    EPwm1Regs.TBCTR = 0x0000;
+    EPwm2Regs.TBCTR = 0x0000;
+    EPwm3Regs.TBCTR = 0x0000;
+
+    //sets the phase angle for each wave
     EPwm1Regs.TBPHS.half.TBPHS =
             (Uint16) (liveEpwmParams.phaseLead1 / (360) * (liveEpwmParams.epwmTimerTBPRD));
     EPwm2Regs.TBPHS.half.TBPHS =
@@ -163,68 +183,47 @@ void Init_Epwmm()
     EPwm3Regs.TBPHS.half.TBPHS =
             (Uint16) (liveEpwmParams.phaseLead1 / (360) * (liveEpwmParams.epwmTimerTBPRD));
 
-    /// Set timer period
+    // These bits determine the period of the time-base counter (sets the PWM frequency)
     EPwm1Regs.TBPRD = liveEpwmParams.epwmTimerTBPRD;
     EPwm2Regs.TBPRD = liveEpwmParams.epwmTimerTBPRD;
     EPwm3Regs.TBPRD = liveEpwmParams.epwmTimerTBPRD;
 
-    /// Clear counter
-    EPwm1Regs.TBCTR = 0x0000;
-    EPwm2Regs.TBCTR = 0x0000;
-    EPwm3Regs.TBCTR = 0x0000;
-
-    /// Sets compare A value to 0
+    // Sets compare A value to 0
     EPwm1Regs.CMPA.half.CMPA = 0;
     EPwm2Regs.CMPA.half.CMPA = 0;
     EPwm3Regs.CMPA.half.CMPA = 0;
 
-    /// Count up/down mode
-    EPwm1Regs.TBCTL.bit.CTRMODE = TB_COUNT_UPDOWN;
-    EPwm2Regs.TBCTL.bit.CTRMODE = TB_COUNT_UPDOWN;
-    EPwm3Regs.TBCTL.bit.CTRMODE = TB_COUNT_UPDOWN;
-
-    /// Interrupt on when counter = 0
+    // Interrupt when counter = 0
     EPwm1Regs.ETSEL.bit.INTSEL = ET_CTR_ZERO;
     EPwm2Regs.ETSEL.bit.INTSEL = ET_CTR_ZERO;
     EPwm3Regs.ETSEL.bit.INTSEL = ET_CTR_ZERO;
 
-    /// Enable INT generation
+    // Enable INT generation
     EPwm1Regs.ETSEL.bit.INTEN = 1;
     EPwm2Regs.ETSEL.bit.INTEN = 1;
     EPwm3Regs.ETSEL.bit.INTEN = 1;
 
-    /// Generate INT on 1st event
+    // Generate INT on 1st event
     EPwm1Regs.ETPS.bit.INTPRD = ET_1ST;
     EPwm2Regs.ETPS.bit.INTPRD = ET_1ST;
     EPwm3Regs.ETPS.bit.INTPRD = ET_1ST;
 
-    /// Clock ratio to SYSCLKOUT
-    EPwm1Regs.TBCTL.bit.HSPCLKDIV = TB_DIV1;
-    EPwm2Regs.TBCTL.bit.HSPCLKDIV = TB_DIV1;
-    EPwm3Regs.TBCTL.bit.HSPCLKDIV = TB_DIV1;
-
-    /// Clock ratio to SYSCLKOUT
-    EPwm1Regs.TBCTL.bit.CLKDIV = TB_DIV1;
-    EPwm2Regs.TBCTL.bit.CLKDIV = TB_DIV1;
-    EPwm3Regs.TBCTL.bit.CLKDIV = TB_DIV1;
-
-    // Enable shadow mode for Compare A registers of ePWMx
+    // Enable shadow mode for Compare A registers of ePWMx (Operates as a double buffer.)
     EPwm1Regs.CMPCTL.bit.SHDWAMODE = CC_SHADOW;
     EPwm2Regs.CMPCTL.bit.SHDWAMODE = CC_SHADOW;
     EPwm3Regs.CMPCTL.bit.SHDWAMODE = CC_SHADOW;
 
-
-    /// Load on Zero
+    // Load From Shadow Select Mode when counter = Zero
     EPwm1Regs.CMPCTL.bit.LOADAMODE = CC_CTR_ZERO;
     EPwm2Regs.CMPCTL.bit.LOADAMODE = CC_CTR_ZERO;
     EPwm3Regs.CMPCTL.bit.LOADAMODE = CC_CTR_ZERO;
 
-    /// Set PWMxA on event A, up count
+    // Set PWMxA on event A, up count
     EPwm1Regs.AQCTLA.bit.CAU = AQ_SET;
     EPwm2Regs.AQCTLA.bit.CAU = AQ_SET;
     EPwm3Regs.AQCTLA.bit.CAU = AQ_SET;
 
-    /// Clear PWM1A on event A, down count
+    // Clear PWMxA on event A, down count
     EPwm1Regs.AQCTLA.bit.CAD = AQ_CLEAR;
     EPwm2Regs.AQCTLA.bit.CAD = AQ_CLEAR;
     EPwm3Regs.AQCTLA.bit.CAD = AQ_CLEAR;
