@@ -1,4 +1,4 @@
-# Function Generator
+# Three Phase Function Generator
 
 ## About
 
@@ -82,7 +82,7 @@ The PWM (Pulse Width Modulation) creates the waveform by generating a sinusoidal
 3. Sinusoidal Signal Generation
   Angle Calculation: An angle is incremented in each ISR call to simulate the sinusoidal waveform.
   Angle Increment: This value determines how fast the angle progresses based on the sinusoidal frequency.
-    float angleincrement = 2 * M_PI / (originalePwmParams.pwm_frequency / originalePwmParams.sin_frequency);
+    float angleincrement = 2 * M_PI * (originalePwmParams.sin_frequency / originalePwmParams.pwm_frequency);
   Wrap-around Logic: If the angle exceeds 2 * M_PI, it wraps around to keep it within the range of 0 to 2 * M_PI.
 
 4. Duty Cycle Calculation
@@ -90,8 +90,10 @@ The PWM (Pulse Width Modulation) creates the waveform by generating a sinusoidal
     float duty_cycle = (sinf(angle + originalePwmParams.angle_1 * M_PI / 180.0) * originalePwmParams.modulation_depth + 1) * 0.5 - originalePwmParams.offset;
    
 6. Compare
-   The duty cycle (calculated as a percentage) is then multiplied by the period and stored in the compare register
-   
+   The one minus the duty cycle (calculated as a percentage) is then multiplied by the period and stored in the compare register (one minus just makes the math a little better to follow)
+
+   ![image](https://github.com/user-attachments/assets/d8db373e-0a5c-4746-aa1f-c6b0851fce76)
+
 ## Acknowledgements
 
 This project has been developed by Ethan Robotham.
